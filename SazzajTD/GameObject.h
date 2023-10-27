@@ -3,18 +3,21 @@
 
 #include "GameDefs.h"
 
+//base class for Game Objects
+//game objects can be enemy units, ally buildings, static objects, etc.
+
 class cGameObject
 {
 public:
 	cGameObject();
-	~cGameObject();
+	virtual ~cGameObject();
 
-	void					Update( float deltaTime );
-	void					Draw();
+	virtual void					Update( float deltaTime );
+	virtual void					Draw();
 
 protected:
-	int						m_health = 0;
-	tGameTransform			m_transform;
+	int								m_health = 0;
+	tGameTransform					m_transform;
 };
 
 #endif

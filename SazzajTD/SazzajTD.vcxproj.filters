@@ -38,6 +38,9 @@
     <ClInclude Include="GameRenderer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="AIUnit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SazzajTD.cpp">
@@ -56,6 +59,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AIUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

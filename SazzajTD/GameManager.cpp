@@ -1,5 +1,6 @@
 #include "GameManager.h"
 #include "GameObject.h"
+#include "AIUnit.h"
 
 cGameManager* cGameManager::s_instance( nullptr );
 
@@ -31,7 +32,7 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
-	m_gameObjects.push_back( new cGameObject() );
+	m_gameObjects.push_back( new cAIUnit() );
 
 	return true;
 }

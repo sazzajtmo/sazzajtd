@@ -135,6 +135,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AIUnit.h" />
     <ClInclude Include="AppManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameDefs.h" />
@@ -146,6 +147,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AIUnit.cpp" />
     <ClCompile Include="AppManager.cpp" />
     <ClCompile Include="GameDefs.cpp" />
     <ClCompile Include="GameManager.cpp" />
