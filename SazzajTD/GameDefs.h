@@ -4,6 +4,31 @@
 #include <cmath>
 #include <cfloat>
 
+struct tColor
+{
+	float r = 1.f;
+	float g = 1.f;
+	float b = 1.f;
+	float a = 1.f;
+
+	tColor(){}
+	tColor( float _r, float _g, float _b ) : r(_r), g(_g), b(_b), a( 1.f ) {}
+	tColor( float _r, float _g, float _b, float _a ) : r(_r), g(_g), b(_b), a(_a) {}
+	
+	/// <summary>
+	/// 0xAARRGGBB
+	/// </summary>
+	/// <param name="hex"></param>
+	tColor( unsigned int hex )
+	{		
+		a = static_cast<float>( ( hex >> 24 ) & 0xff ) / 255.f;
+		r = static_cast<float>( ( hex >> 16 ) & 0xff ) / 255.f;
+		g = static_cast<float>( ( hex >>  8 ) & 0xff ) / 255.f;
+		b = static_cast<float>( ( hex >>  0 ) & 0xff ) / 255.f;
+	}
+
+};
+
 template<typename T = float>
 struct tVector2D
 {

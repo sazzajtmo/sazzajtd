@@ -1,6 +1,7 @@
 #include "GameManager.h"
 #include "GameObject.h"
 #include "AIUnit.h"
+#include "GameBoard.h"
 
 cGameManager* cGameManager::s_instance( nullptr );
 
@@ -32,6 +33,10 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
+	cGameBoard* gameBoard = new cGameBoard();
+	gameBoard->InitPathfinding( 640, 480 ); //get size from renderer??
+	m_gameObjects.push_back( gameBoard );
+	
 	m_gameObjects.push_back( new cAIUnit() );
 
 	return true;

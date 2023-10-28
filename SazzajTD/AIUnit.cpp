@@ -31,7 +31,7 @@ void cAIUnit::Update(float deltaTime)
 
 void cAIUnit::Draw()
 {
-	cGameRenderer::GetInstance()->DrawImmediate( m_targetPos );
+	cGameRenderer::GetInstance()->DrawImmediate( m_targetPos, 0xff00ff00 );
 
 	cGameObject::Draw();
 }

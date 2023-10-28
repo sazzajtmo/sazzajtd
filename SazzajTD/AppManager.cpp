@@ -7,6 +7,7 @@
 #include "GameRenderer.h"
 
 #pragma comment( lib, "SDL2.lib" )
+#pragma comment( lib, "SDL2_image.lib" )
 
 cAppManager* cAppManager::s_instance( nullptr );
 

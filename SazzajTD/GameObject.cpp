@@ -17,5 +17,5 @@ void cGameObject::Update(float deltaTime)
 
 void cGameObject::Draw()
 {
-	cGameRenderer::GetInstance()->DrawImmediate( m_transform );
+	cGameRenderer::GetInstance()->DrawImmediate( m_transform, 0xff0000ff );
 }
