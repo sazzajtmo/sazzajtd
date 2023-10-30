@@ -11,6 +11,10 @@ cGameObject::~cGameObject()
 {
 }
 
+void cGameObject::Init()
+{
+}
+
 void cGameObject::Update(float deltaTime)
 {
 }

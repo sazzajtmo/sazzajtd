@@ -5,6 +5,7 @@
 #include <math.h>
 #include "GameManager.h"
 #include "GameRenderer.h"
+#include "GameInputManager.h"
 
 #pragma comment( lib, "SDL2.lib" )
 #pragma comment( lib, "SDL2_image.lib" )
@@ -101,6 +102,15 @@ void cAppManager::MainLoop()
 					{
 						keep_going = SDL_FALSE;
 					}
+				break;
+
+				case SDL_EventType::SDL_MOUSEBUTTONUP:  /* keep track of the latest mouse position */
+					/* center the square where the mouse is */
+					//SDL_Log( "hello %d", event.button.button );
+					mouseposrect.x = event.motion.x - (mouseposrect.w / 2);
+					mouseposrect.y = event.motion.y - (mouseposrect.h / 2);
+
+					cGameInputManager::GetInstance()->FeedMouseEvent( event.button.button, event.motion.x, event.motion.y );
 				break;
 
 				case SDL_EventType::SDL_MOUSEMOTION:  /* keep track of the latest mouse position */

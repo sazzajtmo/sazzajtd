@@ -250,8 +250,8 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 
 void cGameBoard::Update(float deltaTime)
 {
-	m_currPath	= FindPathBFS( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
-	m_currPath2	= FindPathAstar( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
+	//m_currPath	= FindPathBFS( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
+	//m_currPath2	= FindPathAstar( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
 }
 
 void cGameBoard::Draw()
@@ -260,10 +260,10 @@ void cGameBoard::Draw()
 	{
 		for (const auto& neighbour : gridPoint->neighbours)
 		{
-			cGameRenderer::GetInstance()->DrawLine( gridPoint->pos, neighbour->pos, 0xffff0000 );
+			cGameRenderer::GetInstance()->DrawLine( gridPoint->pos, neighbour->pos, 0x3fffffff );
 		}
 
-		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0xffffff00 );
+		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0x3fffffff );
 	}
 
 	for ( int i = 1; i < (int) m_currPath.size(); i++ )

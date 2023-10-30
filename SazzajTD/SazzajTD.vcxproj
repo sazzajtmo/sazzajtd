@@ -140,9 +140,11 @@
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameBoard.h" />
     <ClInclude Include="GameDefs.h" />
+    <ClInclude Include="GameInputManager.h" />
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameRenderer.h" />
+    <ClInclude Include="PlayerUnit.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SazzajTD.h" />
     <ClInclude Include="targetver.h" />
@@ -152,9 +154,11 @@
     <ClCompile Include="AppManager.cpp" />
     <ClCompile Include="GameBoard.cpp" />
     <ClCompile Include="GameDefs.cpp" />
+    <ClCompile Include="GameInputManager.cpp" />
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameRenderer.cpp" />
+    <ClCompile Include="PlayerUnit.cpp" />
     <ClCompile Include="SazzajTD.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -2,8 +2,10 @@
 #define GAME_MANAGER_H
 
 #include <vector>
+#include <memory>
 
 class cGameObject;
+class cGameBoard;
 
 class cGameManager final
 {
@@ -12,20 +14,33 @@ private:
 	~cGameManager();
 
 public:
-	static cGameManager*	GetInstance();
-	static void				DestroyInstance();
+	static	cGameManager*				GetInstance();
+	static	void							DestroyInstance();
 
-	bool					Init();
-	void					Cleanup();
+			bool							Init();
+			void							Cleanup();
 
-	void					Update( float deltaTime );
-	void					Draw();
+			template<class T>
+			void							SpawnObject()
+			{
+				cGameObject* gameObject = new T;
+
+				gameObject->Init();
+
+				m_gameObjects.push_back( gameObject );
+			}
+
+			void							Update( float deltaTime );
+			void							Draw();
+
+	inline	std::shared_ptr<cGameBoard>		GetGameBoard()	{ return m_gameBoard; }
 
 private:
-	static cGameManager*	s_instance;
+	static	cGameManager*					s_instance;
 
-	std::vector<cGameObject*>
-							m_gameObjects;
+			std::vector<cGameObject*>		m_gameObjects;
+
+			std::shared_ptr<cGameBoard>		m_gameBoard;
 };
 
 #endif
