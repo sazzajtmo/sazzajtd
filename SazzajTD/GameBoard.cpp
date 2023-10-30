@@ -1,6 +1,7 @@
 #include "GameBoard.h"
 #include <cmath>
 #include <algorithm>
+#include <queue>
 #include "GameRenderer.h"
 
 cGameBoard::cGameBoard()
@@ -49,7 +50,8 @@ void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
 			{
 				tPoint* newGridPoint = new tPoint();
 				newGridPoint->pos.x = ( (float) x / (float) boardWidth )	* (float) maxBoardWidth;
-				newGridPoint->pos.y = ( (float) y / (float) boardHeight )	* (float) maxBoardHeight;				
+				newGridPoint->pos.y = ( (float) y / (float) boardHeight )	* (float) maxBoardHeight;
+				newGridPoint->cost	= 0.f;//std::rand() % 100;//( ( color.r - threshold ) / ( 1.f - threshold ) ) * 10.f;
 	
 				linkNeighbours( newGridPoint, x - widthStep	, y					);	//W
 				linkNeighbours( newGridPoint, x - widthStep	, y - heightStep	);	//NW
@@ -62,9 +64,9 @@ void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
 	}
 }
 
-cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y)
+cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance) const
 {
-	const int n = m_boardGrid.size();
+	const int n = (const int) m_boardGrid.size();
 
 	if( n == 0u )
 		return nullptr;
@@ -80,7 +82,7 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y)
 	{
 		m = l + ( r - l ) / 2;
 
-		if (std::abs( y - m_boardGrid[m]->pos.y ) < 1.f)
+		if (std::abs( y - m_boardGrid[m]->pos.y ) < tolerance)
 		{
 			found = true;
 			break;
@@ -101,8 +103,8 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y)
 	l = m;
 	r = m;
 
-	while( l > 0 && std::abs( y - m_boardGrid[l-1]->pos.y ) < 1.f ) l--;
-	while( r < n-1 && std::abs( y - m_boardGrid[r+1]->pos.y ) < 1.f ) r++;
+	while( l > 0 && std::abs( y - m_boardGrid[l-1]->pos.y ) < tolerance ) l--;
+	while( r < n-1 && std::abs( y - m_boardGrid[r+1]->pos.y ) < tolerance ) r++;
 
 	found	= false;
 
@@ -110,7 +112,7 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y)
 	{
 		m = l + ( r - l ) / 2;
 
-		if (std::abs(m_boardGrid[m]->pos.x - x) < 1.f)
+		if (std::abs(m_boardGrid[m]->pos.x - x) < tolerance)
 		{
 			found = true;
 			break;
@@ -128,8 +130,128 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y)
 	return found ? m_boardGrid[m] : nullptr;
 }
 
+std::vector<tVector2Df> cGameBoard::FindPathBFS(const tVector2Df& startPos, const tVector2Df& endPos) const
+{
+	tPoint* start	= FindGridPoint( startPos.x, startPos.y );
+	tPoint* end		= FindGridPoint( endPos.x, endPos.y );
+
+	if( !start || !end )
+		return {};
+
+	std::queue<tPoint*>			frontier;
+	std::map<tPoint*, tPoint*>	visitMap;	//next visited from current
+
+	frontier.push( start );
+	visitMap[start] = nullptr;
+
+	tPoint* current = nullptr;
+
+	while (!frontier.empty())
+	{
+		current = frontier.front();
+		frontier.pop();
+
+		if( current == end )
+			break;
+
+		for (const auto& neighbour : current->neighbours)
+		{
+			if (visitMap.count(neighbour) == 0u)
+			{
+				frontier.push( neighbour );
+				visitMap[neighbour] = current;
+			}
+		}
+	}
+
+	if( !current )
+		return {};
+
+	std::vector<tVector2Df> path;
+
+	while (current != start)
+	{
+		path.push_back( current->pos );
+		current = visitMap[current];
+	}
+
+	path.push_back( start->pos );
+
+	return path;
+}
+
+std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, const tVector2Df& endPos) const
+{
+	tPoint* start	= FindGridPoint( startPos.x, startPos.y );
+	tPoint* end		= FindGridPoint( endPos.x, endPos.y );
+
+	if( !start || !end )
+		return {};	
+
+	auto prioQueComp = [](const std::pair<tPoint*, float>& a, const std::pair<tPoint*, float>& b)
+	{
+		return a.second > b.second;
+	};
+
+	std::priority_queue <std::pair<tPoint*, float>, std::vector<std::pair<tPoint*, float>>, decltype(prioQueComp)> 
+									frontier(prioQueComp);
+	std::map<tPoint*, tPoint*>		visitMap;
+	std::map<tPoint*, float>		costMap;
+
+	frontier.push( std::pair<tPoint*, float>( start, 0.f ) );
+	visitMap[start] = nullptr;
+	costMap[start]	= 0.f;
+
+	std::pair<tPoint*, float> current;
+
+	auto heuristic = []( const tPoint* current, const tPoint* goal )
+	{
+		return abs(current->pos.x - goal->pos.x) + abs(current->pos.y - goal->pos.y);
+	};
+
+	while (!frontier.empty())
+	{
+		current = frontier.top();
+		frontier.pop();
+
+		if( current.first == end )
+			break;
+
+		for (const auto& neighbour : current.first->neighbours)
+		{
+			float newCostSoFar = costMap[current.first] + neighbour->cost;
+
+			if (costMap.count(neighbour) == 0u || newCostSoFar < costMap[neighbour])
+			{
+				costMap[neighbour] = newCostSoFar;
+				frontier.push( std::pair<tPoint*, float>( neighbour, heuristic( neighbour, end ) ) );
+				visitMap[neighbour] = current.first;
+			}
+		}
+	}
+
+	tPoint* trav = current.first;
+
+	if( !trav )
+		return {};
+
+	std::vector<tVector2Df> path;
+
+	while (trav != start)
+	{
+		path.push_back( trav->pos );
+		trav = visitMap[trav];
+	}
+
+	path.push_back( start->pos );
+
+	return path;
+}
+
 void cGameBoard::Update(float deltaTime)
 {
+	m_currPath	= FindPathBFS( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
+	m_currPath2	= FindPathAstar( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
 }
 
 void cGameBoard::Draw()
@@ -144,5 +266,18 @@ void cGameBoard::Draw()
 		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0xffffff00 );
 	}
 
-	//cGameRenderer::GetInstance()->DrawImmediate( m_transform );
+	for ( int i = 1; i < (int) m_currPath.size(); i++ )
+	{
+		cGameRenderer::GetInstance()->DrawImmediate( m_currPath[i-1], 0xff0000ff );
+		cGameRenderer::GetInstance()->DrawLine( m_currPath[i-1], m_currPath[i], 0xff0000ff );
+	}
+
+	for ( int i = 1; i < (int) m_currPath2.size(); i++ )
+	{
+		cGameRenderer::GetInstance()->DrawImmediate( m_currPath2[i-1], 0xff00ff00 );
+		cGameRenderer::GetInstance()->DrawLine( m_currPath2[i-1], m_currPath2[i], 0xff00ff00 );
+	}
+
+	cGameRenderer::GetInstance()->DrawImmediate( tVector2Df( 315.f, 80.f ), 0xffff0000 );
+	cGameRenderer::GetInstance()->DrawImmediate( tVector2Df( 525.f, 64.f ), 0xffff0000 );
 }
