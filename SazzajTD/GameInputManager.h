@@ -29,7 +29,7 @@ public:
 	struct tMouseCallbackStorage
 	{
 		std::function<void(const tMouseEventData&)>	callback;
-		unsigned int							handle;
+		unsigned int								handle;
 
 		bool operator==(const tMouseCallbackStorage& b)
 		{

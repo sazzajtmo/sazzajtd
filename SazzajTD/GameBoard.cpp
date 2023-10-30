@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <queue>
 #include "GameRenderer.h"
+#include "MemHelper.h"
 
 cGameBoard::cGameBoard()
 {
@@ -10,6 +11,16 @@ cGameBoard::cGameBoard()
 
 cGameBoard::~cGameBoard()
 {
+}
+
+void cGameBoard::Cleanup()
+{
+	for( auto& gridPoint : m_boardGrid )
+		delete gridPoint;
+
+	m_boardGrid.clear();
+
+	cGameObject::Cleanup();
 }
 
 void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
@@ -48,7 +59,7 @@ void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
 			
 			if (color.r > threshold)
 			{
-				tPoint* newGridPoint = new tPoint();
+				tPoint* newGridPoint = snew tPoint();
 				newGridPoint->pos.x = ( (float) x / (float) boardWidth )	* (float) maxBoardWidth;
 				newGridPoint->pos.y = ( (float) y / (float) boardHeight )	* (float) maxBoardHeight;
 				newGridPoint->cost	= 0.f;//std::rand() % 100;//( ( color.r - threshold ) / ( 1.f - threshold ) ) * 10.f;
@@ -70,8 +81,6 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 
 	if( n == 0u )
 		return nullptr;
-
-	tVector2Df toFind( x, y );
 	
 	int l = 0;
 	int r = n-1;
@@ -132,8 +141,8 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 
 std::vector<tVector2Df> cGameBoard::FindPathBFS(const tVector2Df& startPos, const tVector2Df& endPos) const
 {
-	tPoint* start	= FindGridPoint( startPos.x, startPos.y );
-	tPoint* end		= FindGridPoint( endPos.x, endPos.y );
+	tPoint* start		= FindGridPoint( startPos.x, startPos.y );
+	const tPoint* end	= FindGridPoint( endPos.x, endPos.y );
 
 	if( !start || !end )
 		return {};
@@ -183,7 +192,7 @@ std::vector<tVector2Df> cGameBoard::FindPathBFS(const tVector2Df& startPos, cons
 std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, const tVector2Df& endPos) const
 {
 	tPoint* start	= FindGridPoint( startPos.x, startPos.y );
-	tPoint* end		= FindGridPoint( endPos.x, endPos.y );
+	const tPoint* end		= FindGridPoint( endPos.x, endPos.y );
 
 	if( !start || !end )
 		return {};	
@@ -256,9 +265,9 @@ void cGameBoard::Update(float deltaTime)
 
 void cGameBoard::Draw()
 {
-	for (const auto& gridPoint : m_boardGrid)
+	for (const auto* gridPoint : m_boardGrid)
 	{
-		for (const auto& neighbour : gridPoint->neighbours)
+		for (const auto* neighbour : gridPoint->neighbours)
 		{
 			cGameRenderer::GetInstance()->DrawLine( gridPoint->pos, neighbour->pos, 0x3fffffff );
 		}

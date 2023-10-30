@@ -15,6 +15,10 @@ void cGameObject::Init()
 {
 }
 
+void cGameObject::Cleanup()
+{
+}
+
 void cGameObject::Update(float deltaTime)
 {
 }

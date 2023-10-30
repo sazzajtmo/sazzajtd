@@ -3,6 +3,7 @@
 #include "AIUnit.h"
 #include "PlayerUnit.h"
 #include "GameBoard.h"
+#include "MemHelper.h"
 
 cGameManager* cGameManager::s_instance( nullptr );
 
@@ -17,7 +18,7 @@ cGameManager::~cGameManager()
 cGameManager* cGameManager::GetInstance()
 {
 	if( !s_instance )
-		s_instance = new cGameManager;
+		s_instance = snew cGameManager;
 
 	return s_instance;
 }
@@ -34,7 +35,7 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
-	m_gameBoard.reset( new cGameBoard() );
+	m_gameBoard.reset( snew cGameBoard() );
 	m_gameBoard->InitPathfinding( 640, 480 ); //get size from renderer??
 
 	SpawnObject<cAIUnit>();
@@ -52,7 +53,11 @@ void cGameManager::Cleanup()
 
 	m_gameObjects.clear();
 
-	m_gameBoard.reset();
+	if (m_gameBoard.get())
+	{
+		m_gameBoard->Cleanup();
+		m_gameBoard.reset();
+	}
 }
 
 void cGameManager::Update(float deltaTime)

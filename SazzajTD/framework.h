@@ -9,7 +9,9 @@
 // Windows Header Files
 #include <windows.h>
 // C RunTime Header Files
+#define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
+#include <crtdbg.h>
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>

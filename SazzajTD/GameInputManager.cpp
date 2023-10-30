@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "AIUnit.h"
 #include "GameBoard.h"
+#include "MemHelper.h"
 
 cGameInputManager* cGameInputManager::s_instance( nullptr );
 
@@ -16,7 +17,7 @@ cGameInputManager::~cGameInputManager()
 cGameInputManager* cGameInputManager::GetInstance()
 {
 	if( !s_instance )
-		s_instance = new cGameInputManager;
+		s_instance = snew cGameInputManager;
 
 	return s_instance;
 }

@@ -2,6 +2,7 @@
 #include "SDL.h"
 #include "SDL_surface.h"
 #include "SDL_image.h"
+#include "MemHelper.h"
 
 cGameRenderer* cGameRenderer::s_instance( nullptr );
 
@@ -16,7 +17,7 @@ cGameRenderer::~cGameRenderer()
 cGameRenderer* cGameRenderer::GetInstance()
 {
 	if( !s_instance )
-		s_instance = new cGameRenderer;
+		s_instance = snew cGameRenderer;
 
 	return s_instance;
 }

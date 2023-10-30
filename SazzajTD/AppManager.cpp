@@ -6,6 +6,7 @@
 #include "GameManager.h"
 #include "GameRenderer.h"
 #include "GameInputManager.h"
+#include "MemHelper.h"
 
 #pragma comment( lib, "SDL2.lib" )
 #pragma comment( lib, "SDL2_image.lib" )
@@ -23,7 +24,7 @@ cAppManager::~cAppManager()
 cAppManager* cAppManager::GetInstance()
 {
 	if( !s_instance )
-		s_instance = new cAppManager;
+		s_instance = snew cAppManager;
 
 	return s_instance;
 }
@@ -58,6 +59,7 @@ bool cAppManager::Init()
 		return false;
 	}
 
+	cGameInputManager::GetInstance();
 	cGameRenderer::GetInstance()->Init( m_window );
 
 	if( !cGameManager::GetInstance()->Init() )
@@ -71,6 +73,8 @@ bool cAppManager::Init()
 
 void cAppManager::Cleanup()
 {
+	cGameManager::DestroyInstance();
+	cGameInputManager::DestroyInstance();
 	cGameRenderer::DestroyInstance();
 	SDL_DestroyWindow( m_window );
 	SDL_Quit();

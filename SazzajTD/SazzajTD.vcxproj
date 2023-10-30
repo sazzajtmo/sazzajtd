@@ -144,6 +144,7 @@
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameRenderer.h" />
+    <ClInclude Include="MemHelper.h" />
     <ClInclude Include="PlayerUnit.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SazzajTD.h" />

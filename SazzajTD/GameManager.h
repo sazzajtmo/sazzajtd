@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include "MemHelper.h"
 
 class cGameObject;
 class cGameBoard;
@@ -23,7 +24,7 @@ public:
 			template<class T>
 			void							SpawnObject()
 			{
-				cGameObject* gameObject = new T;
+				cGameObject* gameObject = snew T;
 
 				gameObject->Init();
 

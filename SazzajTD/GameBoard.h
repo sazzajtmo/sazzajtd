@@ -19,6 +19,8 @@ public:
 	cGameBoard();
 	virtual ~cGameBoard();
 			
+		void					Cleanup() override;
+
 		void					InitPathfinding( int boardWidth, int boardHeight );
 		tPoint*					FindGridPoint( float x, float y, float tolerance = 10.f ) const;
 

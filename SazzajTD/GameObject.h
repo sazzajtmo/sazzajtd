@@ -13,6 +13,7 @@ public:
 	virtual ~cGameObject();
 
 	virtual void					Init();
+	virtual	void					Cleanup();
 	virtual void					Update( float deltaTime );
 	virtual void					Draw();
 
