@@ -32,6 +32,15 @@ private:
 		explicit tDrawLine( tVector2Df _start, tVector2Df _end, tColor _color ) : start( _start ), end( _end ), color( _color ) {}
 	};
 
+	struct tDrawTex
+	{
+		SDL_Texture*	tex = nullptr;
+		tRectf			clip;
+		tRectf			pos;
+
+		explicit tDrawTex( SDL_Texture* _tex, tRectf _clip, tRectf _pos ) : tex( _tex ), clip( _clip ), pos( _pos ) {}
+	};
+
 	cGameRenderer();
 	~cGameRenderer();
 
@@ -49,10 +58,13 @@ public:
 	void					DrawImmediate( const tGameTransform& transform, const tColor& color );
 	void					DrawImmediate( const tVector2Df& pos, const tColor& color );
 	void					DrawLine( const tVector2Df& start, const tVector2Df& end, const tColor& color );
+	void					DrawTexture( SDL_Texture* tex, const tRectf& clip, const tRectf& pos );
 
 	bool					LoadCustomSurface( const std::string& pathToFile );
 	void					GetSurfaceSize( const std::string& surfaceName, int& w, int& h );
 	tColor					GetRGBA( const std::string& surfaceName, int x, int y ) const;
+
+	SDL_Texture*			GetSDLTexture( const std::string& pathToFile );
 
 private:
 	static cGameRenderer*	s_instance;
@@ -62,6 +74,7 @@ private:
 	//TODO merge these together
 	std::vector<tDrawBit>	m_renderedBits;
 	std::vector<tDrawLine>	m_renderedLines;
+	std::vector<tDrawTex>	m_renderedTextures;
 
 	std::map< std::string, SDL_Surface* >
 							m_customSurfaces;

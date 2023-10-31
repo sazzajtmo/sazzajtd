@@ -42,7 +42,7 @@ void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
 
 	auto linkNeighbours = [this](tPoint* gridPoint, int x, int y)
 	{
-		tPoint* neighbor = FindGridPoint( x, y );
+		tPoint* neighbor = FindGridPoint( static_cast<float>(x), static_cast<float>(y) );
 
 		if( neighbor ) 
 		{
@@ -77,14 +77,14 @@ void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
 
 cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance) const
 {
-	const int n = (const int) m_boardGrid.size();
+	const int64_t n = static_cast<int64_t>(m_boardGrid.size());
 
 	if( n == 0u )
 		return nullptr;
 	
-	int l = 0;
-	int r = n-1;
-	int m = 0;
+	int64_t l = 0;
+	int64_t r = n-1;
+	int64_t m = 0;
 	bool found = false;
 
 	while (l <= r)
@@ -275,13 +275,13 @@ void cGameBoard::Draw()
 		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0x3fffffff );
 	}
 
-	for ( int i = 1; i < (int) m_currPath.size(); i++ )
+	for ( size_t i = 1u; i < m_currPath.size(); i++ )
 	{
 		cGameRenderer::GetInstance()->DrawImmediate( m_currPath[i-1], 0xff0000ff );
 		cGameRenderer::GetInstance()->DrawLine( m_currPath[i-1], m_currPath[i], 0xff0000ff );
 	}
 
-	for ( int i = 1; i < (int) m_currPath2.size(); i++ )
+	for ( size_t i = 1u; i < m_currPath2.size(); i++ )
 	{
 		cGameRenderer::GetInstance()->DrawImmediate( m_currPath2[i-1], 0xff00ff00 );
 		cGameRenderer::GetInstance()->DrawLine( m_currPath2[i-1], m_currPath2[i], 0xff00ff00 );

@@ -2,6 +2,7 @@
 #include "SDL.h"
 #include "SDL_surface.h"
 #include "SDL_image.h"
+#include "SDL_rect.h"
 #include "MemHelper.h"
 
 cGameRenderer* cGameRenderer::s_instance( nullptr );
@@ -59,6 +60,10 @@ void cGameRenderer::Cleanup()
 
 	if( m_bgTexture )
 		SDL_DestroyTexture( m_bgTexture );
+
+	for( auto& customSurface : m_customSurfaces )
+		SDL_FreeSurface( customSurface.second );
+	m_customSurfaces.clear();
 }
 
 void cGameRenderer::RenderBegin()
@@ -72,9 +77,23 @@ void cGameRenderer::RenderBegin()
 
 void cGameRenderer::Render()
 {
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+
+	//SDL_Rect drawRect;
+	//drawRect.x = 40;
+	//drawRect.y = 40;
+	//drawRect.w = 120;
+	//drawRect.h = 80;
+
+	//SDL_Rect clipRect;
+	//clipRect.x = 40;
+	//clipRect.y = 40;
+	//clipRect.w = 120;
+	//clipRect.h = 80;
+
 	if (m_bgTexture)
 	{
-		SDL_RenderCopy( m_renderer, m_bgTexture, nullptr, nullptr );
+		SDL_RenderCopy( m_renderer, m_bgTexture, 0, 0 );
 	}
 
 	for (const auto& line : m_renderedLines)
@@ -89,14 +108,31 @@ void cGameRenderer::Render()
 	{
 		bitRect.w = (int) bit.transform.scale * 4;
 		bitRect.h = (int) bit.transform.scale * 4;
-		bitRect.x = (int) bit.transform.position.x - bitRect.w * 0.5f;
-		bitRect.y = (int) bit.transform.position.y - bitRect.h * 0.5f;
+		bitRect.x = static_cast<int>( bit.transform.position.x - static_cast<float>( bitRect.w ) * 0.5f );
+		bitRect.y = static_cast<int>( bit.transform.position.y - static_cast<float>( bitRect.h ) * 0.5f );
 
 		SDL_SetRenderDrawColor( m_renderer, static_cast<int>( bit.color.r * 255.f ), static_cast<int>( bit.color.g * 255.f ), static_cast<int>( bit.color.b * 255.f ), static_cast<int>( bit.color.a * 255.f ) );
 		SDL_RenderFillRect( m_renderer, &bitRect );
-		//SDL_RenderDrawPointF( m_renderer, bit.transform.position.x, bit.transform.position.y );
 	}
 
+	SDL_Rect clipRect, posRect;
+
+	for (const auto& tex : m_renderedTextures)
+	{
+		clipRect.x = static_cast<int>( tex.clip.x );
+		clipRect.y = static_cast<int>( tex.clip.y );
+		clipRect.w = static_cast<int>( tex.clip.w );
+		clipRect.h = static_cast<int>( tex.clip.h );
+
+		posRect.x = static_cast<int>( tex.pos.x );
+		posRect.y = static_cast<int>( tex.pos.y );
+		posRect.w = static_cast<int>( tex.pos.w );
+		posRect.h = static_cast<int>( tex.pos.h );
+
+		SDL_RenderCopy( m_renderer, tex.tex, &clipRect, &posRect );
+	}
+
+	m_renderedTextures.clear();
 	m_renderedBits.clear();
 	m_renderedLines.clear();
 }
@@ -125,6 +161,11 @@ void cGameRenderer::DrawImmediate(const tVector2Df& pos, const tColor& color)
 void cGameRenderer::DrawLine(const tVector2Df& start, const tVector2Df& end, const tColor& color)
 {
 	m_renderedLines.emplace_back( start, end, color );
+}
+
+void cGameRenderer::DrawTexture(SDL_Texture* tex, const tRectf& clip, const tRectf& pos)
+{
+	m_renderedTextures.emplace_back( tex, clip, pos );
 }
 
 bool cGameRenderer::LoadCustomSurface(const std::string& pathToFile)
@@ -210,4 +251,17 @@ tColor cGameRenderer::GetRGBA(const std::string& surfaceName, int x, int y) cons
 	color.a = static_cast<float>( a ) / 256.f;
 
 	return color;
+}
+
+SDL_Texture* cGameRenderer::GetSDLTexture(const std::string& pathToFile)
+{
+	if( !m_renderer )
+		return nullptr;
+
+	SDL_Surface* surface = IMG_Load( pathToFile.c_str() );
+
+	if( !surface )
+		return nullptr;
+
+	return SDL_CreateTextureFromSurface( m_renderer, surface );
 }

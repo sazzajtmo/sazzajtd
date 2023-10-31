@@ -5,6 +5,8 @@
 #include "GameDefs.h"
 #include <vector>
 
+class cAnimatedTexture;
+
 class cPlayerUnit : public cGameObject
 {
 public:
@@ -20,6 +22,8 @@ protected:
 	std::vector<tVector2Df>	m_pathToTarget;
 
 	int						m_mouseCbHandle = -1;
+
+	cAnimatedTexture*		m_model			= nullptr;
 	
 };
 

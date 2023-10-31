@@ -109,4 +109,17 @@ tVector2D<T> operator*(const tVector2D<T>& lh, float value)
 	return tVector2D<T>( lh.x * value, lh.y * value );
 }
 
+
+template<typename T = float>
+struct tRect
+{
+	T x{}, y{}, w{}, h{};
+
+	tRect() : x(), y(), w(), h() {}
+	tRect( T v ): x( v ), y( v ), w( v ), h( v ) {}
+	tRect( T _x, T _y, T _w, T _h ): x( _x ), y( _y ), w( _w ), h( _h ) {}
+};
+
+using tRectf = tRect<float>;
+
 #endif
