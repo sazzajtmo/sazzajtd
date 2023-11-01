@@ -4,6 +4,7 @@
 #include "SDL_image.h"
 #include "SDL_rect.h"
 #include "MemHelper.h"
+#include <set>
 
 cGameRenderer* cGameRenderer::s_instance( nullptr );
 
@@ -289,9 +290,12 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
 	SDL_RenderClear(m_renderer);
 
-	for (int y = 0; y < (int)grid.size(); y++)
+	const int numRows = (int) grid.size();
+	const int numCols = (int) grid[0].size();
+
+	for (int y = 0; y < numRows; y++)
 	{
-		for (int x = 0; x < (int)grid[y].size(); x++)
+		for (int x = 0; x < numCols; x++)
 		{
 			tColor		cellColor = grid[y][x] == 0 ? 0xff0f0f0f : 0xffffffff;
 			SDL_Rect	bitRect;
@@ -307,7 +311,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 
 
 	//save to texture part
-	SDL_Surface* surface = SDL_CreateRGBSurface( 0, tileSize * grid[0].size(), tileSize * grid.size(), 32, 0, 0, 0, 0 );
+	SDL_Surface* surface = SDL_CreateRGBSurface( 0, tileSize * numCols, tileSize * numRows, 32, 0, 0, 0, 0 );
 	SDL_RenderReadPixels( m_renderer, 0, surface->format->format, surface->pixels, surface->pitch );
 	IMG_SavePNG( surface, GENERATED_WALKABLE_TEXTURE_FILE_PATH );
 	
@@ -336,14 +340,18 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 		{ "road_WS",    GetSDLTexture( "tiles/road_WS.png" ) }
 	};
 
+	SDL_Texture* simpleGrass = GetSDLTexture( "tiles/grass_1.png" );
+
 	std::vector<SDL_Texture*> grassTextures = 
 	{
-		GetSDLTexture( "tiles/grass_1.png" ),
+		simpleGrass,
 		GetSDLTexture( "tiles/grass_2.png" ),
 		GetSDLTexture( "tiles/grass_3.png" )
 	};
 
-	SDL_Texture* texture = SDL_CreateTexture( m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * grid[0].size(), tileSize * grid.size() );
+	const int numGrassTextures = (int) grassTextures.size();
+
+	SDL_Texture* texture = SDL_CreateTexture( m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * numCols, tileSize * numRows );
 
 	SDL_SetRenderTarget(m_renderer, texture);
 	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
@@ -352,17 +360,46 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 
 	SDL_Rect posRect;
 
-	for (int y = 0; y < (int)grid.size(); y++)
+	for (int y = 0; y < numRows; y++)
 	{
-		for (int x = 0; x < (int)grid[y].size(); x++)
+		for (int x = 0; x < numCols; x++)
 		{
 			posRect.x = x * tileSize;
 			posRect.y = y * tileSize;
 			posRect.w = tileSize;
 			posRect.h = tileSize;
-			SDL_Texture* tileTexture = grassTextures[rand()%3];
+			SDL_Texture* tileTexture = std::rand() % 100 > 80 ? grassTextures[rand()%numGrassTextures] : simpleGrass;
 			SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
 		}
+	}
+
+	const int numTrees = ( numRows * numCols ) / 5;
+
+	std::vector<SDL_Texture*> decorationTextures = 
+	{
+		GetSDLTexture( "tiles/decoration_1.png" ),
+		GetSDLTexture( "tiles/decoration_2.png" )
+	};
+
+	std::set<std::pair<int,int>> decorationPlacements;
+
+	for (int i = 0; i < numTrees; i++)
+	{
+		const int x = std::rand() % numCols;
+		const int y = std::rand() % numRows;
+		auto pair = std::make_pair( x, y );
+
+		if( decorationPlacements.count( pair ) > 0)
+			continue;
+
+		decorationPlacements.insert( pair );
+
+		posRect.x = x * tileSize;
+		posRect.y = y * tileSize;
+		posRect.w = tileSize;
+		posRect.h = tileSize;
+		SDL_Texture* tileTexture = std::rand() % 100 > 80 ? decorationTextures[rand()%2] : decorationTextures[0];
+		SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
 	}
 
 	for (int y = 0; y < (int)grid.size(); y++)

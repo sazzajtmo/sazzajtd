@@ -72,6 +72,14 @@ void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath 
 			}
 		}
 	}
+
+	const int maxCost = 100.f;
+	//edges cost correction
+	for (auto& gridPoint : m_boardGrid)
+	{
+		float newCost = maxCost * ( ( 8.f - 1.f * gridPoint->neighbours.size() ) / 8.f );
+		gridPoint->cost = newCost;
+	}
 }
 
 cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance) const
@@ -228,7 +236,7 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 		for (const auto& neighbour : current.first->neighbours)
 		{
 			float newCostSoFar = costMap[current.first] + neighbour->cost;
-
+						
 			if (costMap.count(neighbour) == 0u || newCostSoFar < costMap[neighbour])
 			{
 				costMap[neighbour] = newCostSoFar;
