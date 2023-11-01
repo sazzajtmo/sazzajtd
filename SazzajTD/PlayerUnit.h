@@ -20,10 +20,11 @@ public:
 protected:
 	tVector2Df				m_targetPos;
 	std::vector<tVector2Df>	m_pathToTarget;
+	int						m_currPathPointIdx	= -1;
 
-	int						m_mouseCbHandle = -1;
+	int						m_mouseCbHandle		= -1;
 
-	cAnimatedTexture*		m_model			= nullptr;
+	cAnimatedTexture*		m_model				= nullptr;
 	
 };
 

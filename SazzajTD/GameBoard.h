@@ -4,6 +4,7 @@
 #include "GameObject.h"
 #include "GameDefs.h"
 #include <vector>
+#include <string>
 
 class cGameBoard : public cGameObject
 {
@@ -21,7 +22,7 @@ public:
 			
 		void					Cleanup() override;
 
-		void					InitPathfinding( int boardWidth, int boardHeight );
+		void					InitPathfinding( const std::string& walkableMapTextureFilePath );
 		tPoint*					FindGridPoint( float x, float y, float tolerance = 10.f ) const;
 
 		std::vector<tVector2Df>	FindPathBFS( const tVector2Df& start, const tVector2Df& end ) const;

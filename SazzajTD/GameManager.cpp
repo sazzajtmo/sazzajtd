@@ -3,6 +3,8 @@
 #include "AIUnit.h"
 #include "PlayerUnit.h"
 #include "GameBoard.h"
+#include "GameBoardGenerator.h"
+#include "GameRenderer.h"
 #include "MemHelper.h"
 
 cGameManager* cGameManager::s_instance( nullptr );
@@ -35,8 +37,12 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
+	GameBoardGenerator::CreateGameBoard( 24, 20, 27, std::rand() % 10 );
+
 	m_gameBoard.reset( snew cGameBoard() );
-	m_gameBoard->InitPathfinding( 640, 480 ); //get size from renderer??
+	m_gameBoard->InitPathfinding( GENERATED_WALKABLE_TEXTURE_FILE_PATH );
+
+	cGameRenderer::GetInstance()->SetBackground( GENERATED_BOARD_TEXTURE_FILE_PATH );
 
 	SpawnObject<cAIUnit>();
 	SpawnObject<cPlayerUnit>();

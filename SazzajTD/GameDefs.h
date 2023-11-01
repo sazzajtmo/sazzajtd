@@ -4,6 +4,9 @@
 #include <cmath>
 #include <cfloat>
 
+#define GENERATED_WALKABLE_TEXTURE_FILE_PATH "generatedBoardWalkableMap.png"
+#define GENERATED_BOARD_TEXTURE_FILE_PATH "generatedBoardMap.png"
+
 struct tColor
 {
 	float r = 1.f;

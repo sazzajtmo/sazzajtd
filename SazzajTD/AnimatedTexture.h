@@ -19,6 +19,7 @@ public:
 			cAnimatedTexture*				SetDimensions( int rows, int cols );
 			cAnimatedTexture*				SetFramerate( float framerate );
 			cAnimatedTexture*				SetPosition( const tVector2Df& position );
+			void							GetFrameDims( float& frameWidth, float& frameHeight ) const;
 	virtual void							Update( float deltaTime );
 	virtual void							Draw();
 

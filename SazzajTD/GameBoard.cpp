@@ -4,6 +4,7 @@
 #include <queue>
 #include "GameRenderer.h"
 #include "MemHelper.h"
+#include "GameBoardGenerator.h"
 
 cGameBoard::cGameBoard()
 {
@@ -23,26 +24,24 @@ void cGameBoard::Cleanup()
 	cGameObject::Cleanup();
 }
 
-void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
+void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath )
 {
-	const std::string mapTextureFileName = "boardMap.png";//"World_elevation_map.png";//
-
-	if (!cGameRenderer::GetInstance()->LoadCustomSurface( mapTextureFileName ))
+	if (!cGameRenderer::GetInstance()->LoadCustomSurface( walkableMapTextureFilePath ))
 	{
 		return;
 	}
 
-	const int divs = 30; //100x100 board
+	const int divs = 60; //100x100 board
 	int boardWidth = 0, boardHeight = 0;
 
-	cGameRenderer::GetInstance()->GetSurfaceSize( mapTextureFileName, boardWidth, boardHeight );
+	cGameRenderer::GetInstance()->GetSurfaceSize( walkableMapTextureFilePath, boardWidth, boardHeight );
 	const int widthStep		= boardWidth / divs;
 	const int heightStep	= boardHeight / divs;
 	const float threshold	= 0.3f;
 
 	auto linkNeighbours = [this](tPoint* gridPoint, int x, int y)
 	{
-		tPoint* neighbor = FindGridPoint( static_cast<float>(x), static_cast<float>(y) );
+		tPoint* neighbor = FindGridPoint( static_cast<float>(x), static_cast<float>(y), 1.f ); //high acurracy find, because we actually know where the grid point is. tolerance should be FLT_EPSILON
 
 		if( neighbor ) 
 		{
@@ -55,13 +54,13 @@ void cGameBoard::InitPathfinding( int maxBoardWidth, int maxBoardHeight )
 	{
 		for (int x = 0; x < boardWidth; x += widthStep)
 		{
-			tColor color = cGameRenderer::GetInstance()->GetRGBA( mapTextureFileName, x, y );
+			tColor color = cGameRenderer::GetInstance()->GetRGBA( walkableMapTextureFilePath, x, y );
 			
 			if (color.r > threshold)
 			{
 				tPoint* newGridPoint = snew tPoint();
-				newGridPoint->pos.x = ( (float) x / (float) boardWidth )	* (float) maxBoardWidth;
-				newGridPoint->pos.y = ( (float) y / (float) boardHeight )	* (float) maxBoardHeight;
+				newGridPoint->pos.x = ( (float) x / (float) boardWidth )	* (float) boardWidth;
+				newGridPoint->pos.y = ( (float) y / (float) boardHeight )	* (float) boardHeight;
 				newGridPoint->cost	= 0.f;//std::rand() % 100;//( ( color.r - threshold ) / ( 1.f - threshold ) ) * 10.f;
 	
 				linkNeighbours( newGridPoint, x - widthStep	, y					);	//W
@@ -239,10 +238,10 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 		}
 	}
 
-	tPoint* trav = current.first;
-
-	if( !trav )
+	if( !current.first || current.first != end )
 		return {};
+
+	tPoint* trav = current.first;
 
 	std::vector<tVector2Df> path;
 
@@ -253,6 +252,7 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 	}
 
 	path.push_back( start->pos );
+	std::reverse( path.begin(), path.end() );
 
 	return path;
 }

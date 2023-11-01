@@ -65,6 +65,12 @@ cAnimatedTexture* cAnimatedTexture::SetPosition(const tVector2Df& position)
 	return this;
 }
 
+void cAnimatedTexture::GetFrameDims(float& frameWidth, float& frameHeight) const
+{
+	frameWidth	= m_frameWidth;
+	frameHeight	= m_frameHeight;
+}
+
 void cAnimatedTexture::Update(float deltaTime)
 {
 	m_currFrameTime += deltaTime;

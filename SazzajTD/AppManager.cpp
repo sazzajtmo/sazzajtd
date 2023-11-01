@@ -2,7 +2,8 @@
 #include "AppManager.h"
 #include "SDL.h"
 #include "SDL_main.h"
-#include <math.h>
+#include <cmath>
+#include <ctime>
 #include "GameManager.h"
 #include "GameRenderer.h"
 #include "GameInputManager.h"
@@ -42,6 +43,8 @@ void cAppManager::DestroyInstance()
 
 bool cAppManager::Init()
 {
+	std::srand( (uint32_t) std::time( 0 ) );
+
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
 	{
 		SDL_Log("SDL init failed %s", SDL_GetError());

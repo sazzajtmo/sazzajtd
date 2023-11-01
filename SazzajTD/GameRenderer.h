@@ -65,6 +65,9 @@ public:
 	tColor					GetRGBA( const std::string& surfaceName, int x, int y ) const;
 
 	SDL_Texture*			GetSDLTexture( const std::string& pathToFile );
+	void					SetBackground( const std::string& pathToFileTexture );
+
+	void					ExportGridToFile( const std::vector<std::vector<int8_t>>& grid, int tileSize );
 
 private:
 	static cGameRenderer*	s_instance;

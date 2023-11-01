@@ -140,6 +140,7 @@
     <ClInclude Include="AppManager.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameBoard.h" />
+    <ClInclude Include="GameBoardGenerator.h" />
     <ClInclude Include="GameDefs.h" />
     <ClInclude Include="GameInputManager.h" />
     <ClInclude Include="GameManager.h" />
@@ -156,6 +157,7 @@
     <ClCompile Include="AnimatedTexture.cpp" />
     <ClCompile Include="AppManager.cpp" />
     <ClCompile Include="GameBoard.cpp" />
+    <ClCompile Include="GameBoardGenerator.cpp" />
     <ClCompile Include="GameDefs.cpp" />
     <ClCompile Include="GameInputManager.cpp" />
     <ClCompile Include="GameManager.cpp" />

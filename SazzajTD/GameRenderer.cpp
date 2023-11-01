@@ -46,10 +46,8 @@ bool cGameRenderer::Init( SDL_Window* window )
 		return false;
 	}
 
-	SDL_Surface* bgSurface = SDL_LoadBMP( "background.bmp" );
-
-	if( bgSurface )
-		m_bgTexture = SDL_CreateTextureFromSurface( m_renderer, bgSurface );
+	//no background
+	//SetBackground( "background.bmp" );
 			
 	return true;
 }
@@ -264,4 +262,145 @@ SDL_Texture* cGameRenderer::GetSDLTexture(const std::string& pathToFile)
 		return nullptr;
 
 	return SDL_CreateTextureFromSurface( m_renderer, surface );
+}
+
+void cGameRenderer::SetBackground(const std::string& pathToFileTexture)
+{
+	if (m_bgTexture)
+	{
+		SDL_DestroyTexture( m_bgTexture );
+		m_bgTexture = nullptr;
+	}
+
+	SDL_Surface* bgSurface = IMG_Load( pathToFileTexture.c_str() );
+
+	if (bgSurface)
+	{
+		m_bgTexture = SDL_CreateTextureFromSurface( m_renderer, bgSurface );
+		SDL_FreeSurface( bgSurface );
+	}
+}
+
+void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& grid, int tileSize)
+{
+	SDL_Texture* walkableTexture = SDL_CreateTexture( m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * grid[0].size(), tileSize * grid.size() );
+
+	SDL_SetRenderTarget(m_renderer, walkableTexture);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
+	SDL_RenderClear(m_renderer);
+
+	for (int y = 0; y < (int)grid.size(); y++)
+	{
+		for (int x = 0; x < (int)grid[y].size(); x++)
+		{
+			tColor		cellColor = grid[y][x] == 0 ? 0xff0f0f0f : 0xffffffff;
+			SDL_Rect	bitRect;
+			bitRect.w = tileSize;
+			bitRect.h = tileSize;
+			bitRect.x = tileSize * x;
+			bitRect.y = tileSize * y;
+
+			SDL_SetRenderDrawColor( m_renderer, static_cast<int>( cellColor.r * 255.f ), static_cast<int>( cellColor.g * 255.f ), static_cast<int>( cellColor.b * 255.f ), static_cast<int>( cellColor.a * 255.f ) );
+			SDL_RenderFillRect( m_renderer, &bitRect );
+		}
+	}
+
+
+	//save to texture part
+	SDL_Surface* surface = SDL_CreateRGBSurface( 0, tileSize * grid[0].size(), tileSize * grid.size(), 32, 0, 0, 0, 0 );
+	SDL_RenderReadPixels( m_renderer, 0, surface->format->format, surface->pixels, surface->pitch );
+	IMG_SavePNG( surface, GENERATED_WALKABLE_TEXTURE_FILE_PATH );
+	
+	SDL_SetRenderTarget(m_renderer, nullptr);
+	SDL_FreeSurface( surface );
+	SDL_DestroyTexture( walkableTexture );
+	//
+
+	std::map<std::string, SDL_Texture*> roadTextures = 
+	{
+		{ "road_block", GetSDLTexture( "tiles/road_block.png" ) },
+		{ "road_E",     GetSDLTexture( "tiles/road_E.png" ) },
+		{ "road_ES",    GetSDLTexture( "tiles/road_ES.png" ) },
+		{ "road_N",     GetSDLTexture( "tiles/road_N.png" ) },
+		{ "road_NE",    GetSDLTexture( "tiles/road_NE.png" ) },
+		{ "road_NES",   GetSDLTexture( "tiles/road_NES.png" ) },
+		{ "road_NS",    GetSDLTexture( "tiles/road_NS.png" ) },
+		{ "road_S",     GetSDLTexture( "tiles/road_S.png" ) },
+		{ "road_W",     GetSDLTexture( "tiles/road_W.png" ) },
+		{ "road_WE",    GetSDLTexture( "tiles/road_WE.png" ) },
+		{ "road_WES",   GetSDLTexture( "tiles/road_WES.png" ) },
+		{ "road_WN",    GetSDLTexture( "tiles/road_WN.png" ) },
+		{ "road_WNE",   GetSDLTexture( "tiles/road_WNE.png" ) },
+		{ "road_WNES",  GetSDLTexture( "tiles/road_WNES.png" ) },
+		{ "road_WNS",   GetSDLTexture( "tiles/road_WNS.png" ) },
+		{ "road_WS",    GetSDLTexture( "tiles/road_WS.png" ) }
+	};
+
+	std::vector<SDL_Texture*> grassTextures = 
+	{
+		GetSDLTexture( "tiles/grass_1.png" ),
+		GetSDLTexture( "tiles/grass_2.png" ),
+		GetSDLTexture( "tiles/grass_3.png" )
+	};
+
+	SDL_Texture* texture = SDL_CreateTexture( m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * grid[0].size(), tileSize * grid.size() );
+
+	SDL_SetRenderTarget(m_renderer, texture);
+	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
+	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+	SDL_RenderClear(m_renderer);
+
+	SDL_Rect posRect;
+
+	for (int y = 0; y < (int)grid.size(); y++)
+	{
+		for (int x = 0; x < (int)grid[y].size(); x++)
+		{
+			posRect.x = x * tileSize;
+			posRect.y = y * tileSize;
+			posRect.w = tileSize;
+			posRect.h = tileSize;
+			SDL_Texture* tileTexture = grassTextures[rand()%3];
+			SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
+		}
+	}
+
+	for (int y = 0; y < (int)grid.size(); y++)
+	{
+		for (int x = 0; x < (int)grid[y].size(); x++)
+		{
+			if (grid[y][x] == 0)
+				continue;
+
+			std::string roadPrefix = "";
+
+			if( x-1 >= 0 && grid[y][x-1] > 0 )
+				roadPrefix += "W";
+			if( y-1 >= 0 && grid[y-1][x] > 0 )
+				roadPrefix += "N";
+			if (x+1 < (int) grid[y].size() && grid[y][x + 1] > 0)
+				roadPrefix += "E";
+			if (y + 1 < (int) grid.size() && grid[y + 1][x] > 0)
+				roadPrefix += "S";
+
+			SDL_Texture* tileTexture = roadPrefix.empty() ? grassTextures[rand()%3] : roadTextures["road_"+roadPrefix];
+
+			posRect.x = x * tileSize;
+			posRect.y = y * tileSize;
+			posRect.w = tileSize;
+			posRect.h = tileSize;
+
+			SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
+		}
+	}
+
+	//save to texture part
+	SDL_Surface* surfaceRGB = SDL_CreateRGBSurface( 0, tileSize * grid[0].size(), tileSize * grid.size(), 32, 0, 0, 0, 0 );
+	SDL_RenderReadPixels( m_renderer, 0, surfaceRGB->format->format, surfaceRGB->pixels, surfaceRGB->pitch );
+	IMG_SavePNG( surfaceRGB, GENERATED_BOARD_TEXTURE_FILE_PATH );
+	
+	SDL_SetRenderTarget(m_renderer, nullptr);
+	SDL_FreeSurface( surfaceRGB );
+	SDL_DestroyTexture( texture );
+	//
 }

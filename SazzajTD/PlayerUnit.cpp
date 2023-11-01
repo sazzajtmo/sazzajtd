@@ -23,11 +23,13 @@ void cPlayerUnit::Init()
 		{
 			m_transform.position.x = static_cast<float>(mouseEvent.x);
 			m_transform.position.y = static_cast<float>(mouseEvent.y);
+			m_pathToTarget.clear();
 		}
 		else if (mouseEvent.button == cGameInputManager::eMouseButton::Right)
 		{
 			m_targetPos.x = static_cast<float>(mouseEvent.x);
 			m_targetPos.y = static_cast<float>(mouseEvent.y);
+			m_pathToTarget.clear();
 		}
 	});
 
@@ -41,11 +43,34 @@ void cPlayerUnit::Update(float deltaTime)
 {
 	if (m_model)
 	{
-		m_model->SetPosition( m_transform.position );
+		float modelW, modelH;
+		m_model->GetFrameDims( modelW, modelH );
+		m_model->SetPosition( m_transform.position - tVector2Df( modelW * 0.5f, modelH * 0.5f ) );
 		m_model->Update( deltaTime );
 	}
 
-	m_pathToTarget = cGameManager::GetInstance()->GetGameBoard()->FindPathAstar( m_transform.position, m_targetPos );
+	if (m_pathToTarget.empty() || m_currPathPointIdx == (int) m_pathToTarget.size() )
+	{
+		m_pathToTarget		= cGameManager::GetInstance()->GetGameBoard()->FindPathAstar( m_transform.position, m_targetPos );
+		m_currPathPointIdx	= 0;
+	}
+	else
+	{
+		const tVector2Df& targetPosition = m_pathToTarget[m_currPathPointIdx];
+
+		if (std::abs(distance(m_transform.position, targetPosition)) < 1.1f)
+		{
+			m_currPathPointIdx++;
+		}
+		else
+		{
+			const int speed = 50.f;
+			tVector2Df dirToDest = directionNormalized( m_transform.position, targetPosition );
+
+			m_transform.position += dirToDest * speed * deltaTime;
+		}
+	}
+
 }
 
 void cPlayerUnit::Draw()
