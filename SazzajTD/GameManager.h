@@ -30,6 +30,7 @@ public:
 
 				m_gameObjects.push_back( gameObject );
 			}
+			void							DespawnObject( cGameObject* gameObject );
 
 			void							Update( float deltaTime );
 			void							Draw();
@@ -40,8 +41,11 @@ private:
 	static	cGameManager*					s_instance;
 
 			std::vector<cGameObject*>		m_gameObjects;
+			std::vector<cGameObject*>		m_despawnList;
 
 			std::shared_ptr<cGameBoard>		m_gameBoard;
+
+			float							m_spawnTimer = 0.f;
 };
 
 #endif

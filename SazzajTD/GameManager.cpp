@@ -37,15 +37,13 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
-	GameBoardGenerator::CreateGameBoard( 24, 20, 27, std::rand() % 10 );
-
 	m_gameBoard.reset( snew cGameBoard() );
-	m_gameBoard->InitPathfinding( GENERATED_WALKABLE_TEXTURE_FILE_PATH );
+	m_gameBoard->Init();
 
 	cGameRenderer::GetInstance()->SetBackground( GENERATED_BOARD_TEXTURE_FILE_PATH );
 
-	SpawnObject<cAIUnit>();
-	SpawnObject<cPlayerUnit>();
+	//SpawnObject<cAIUnit>();
+	//SpawnObject<cPlayerUnit>();
 
 	return true;
 }
@@ -66,13 +64,44 @@ void cGameManager::Cleanup()
 	}
 }
 
+void cGameManager::DespawnObject(cGameObject* gameObject)
+{
+	//should use index rather than pointers
+	m_despawnList.push_back( gameObject );
+}
+
 void cGameManager::Update(float deltaTime)
 {
+	//should use index rather than pointers
+	for (auto& gameObject : m_despawnList)
+	{
+		auto gameObjIt = std::find( m_gameObjects.begin(), m_gameObjects.end(), gameObject );
+
+		if (gameObjIt != m_gameObjects.end())
+		{
+			m_gameObjects.erase(gameObjIt);
+			gameObject->Cleanup();
+			delete gameObject;
+		}
+	}
+
+	m_despawnList.clear();
+
 	if( m_gameBoard )
 		m_gameBoard->Update( deltaTime );
 
 	for( auto& gameObject : m_gameObjects )
 		gameObject->Update( deltaTime );
+
+
+	m_spawnTimer -= deltaTime;
+
+	if (m_spawnTimer <= 0.f)
+	{
+		m_spawnTimer = 1.f;
+
+		SpawnObject<cAIUnit>();
+	}
 }
 
 void cGameManager::Draw()

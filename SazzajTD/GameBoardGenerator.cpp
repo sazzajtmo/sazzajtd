@@ -5,7 +5,7 @@
 #include "GameRenderer.h"
 #include "MemHelper.h"
 
-std::vector<std::vector<int8_t>> GameBoardGenerator::CreateGameBoard(int tileSize, int rows, int cols, int numJunctions)
+std::vector<std::vector<int8_t>> GameBoardGenerator::CreateGameBoard(int tileSize, int rows, int cols, int numJunctions, tVector2Df& entryPointF, tVector2Df& exitPointF)
 {
 	std::vector<std::vector<int8_t>> grid( rows, std::vector<int8_t>(cols) );
 
@@ -72,6 +72,13 @@ std::vector<std::vector<int8_t>> GameBoardGenerator::CreateGameBoard(int tileSiz
 	}
 
 	cGameRenderer::GetInstance()->ExportGridToFile( grid, tileSize );
+
+	//yes inverted because I'm stupid
+	entryPointF.y = static_cast<float>( entryPoint.first * tileSize + tileSize / 2 );
+	entryPointF.x = static_cast<float>( entryPoint.second * tileSize + tileSize / 2 );
+
+	exitPointF.y = static_cast<float>( exitPoint.first * tileSize + tileSize / 2 );
+	exitPointF.x = static_cast<float>( exitPoint.second * tileSize + tileSize / 2 );
 
 	return grid;
 }

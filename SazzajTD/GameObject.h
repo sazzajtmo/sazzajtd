@@ -17,6 +17,8 @@ public:
 	virtual void					Update( float deltaTime );
 	virtual void					Draw();
 
+	virtual	void					SetPosition( const tVector2Df& position );
+
 protected:
 	int								m_health = 0;
 	tGameTransform					m_transform;

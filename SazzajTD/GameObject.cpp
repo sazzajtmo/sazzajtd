@@ -27,3 +27,8 @@ void cGameObject::Draw()
 {
 	cGameRenderer::GetInstance()->DrawImmediate( m_transform, 0xff0000ff );
 }
+
+void cGameObject::SetPosition(const tVector2Df& position)
+{
+	m_transform.position = position;
+}

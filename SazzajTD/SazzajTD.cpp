@@ -13,7 +13,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-	//_CrtSetBreakAlloc(2460);
+	//_CrtSetBreakAlloc(226);
 
 	if( cAppManager::GetInstance()->Init() )
 		cAppManager::GetInstance()->MainLoop();

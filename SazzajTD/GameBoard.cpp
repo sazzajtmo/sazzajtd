@@ -5,6 +5,7 @@
 #include "GameRenderer.h"
 #include "MemHelper.h"
 #include "GameBoardGenerator.h"
+#include "GameLog.h"
 
 cGameBoard::cGameBoard()
 {
@@ -22,6 +23,17 @@ void cGameBoard::Cleanup()
 	m_boardGrid.clear();
 
 	cGameObject::Cleanup();
+}
+
+void cGameBoard::Init()
+{
+	const int tileSize	= 24;
+	const int boardRows	= 20;
+	const int boardCols = 27;
+	const int junctions	= 3 + std::rand() % 7;
+
+	GameBoardGenerator::CreateGameBoard( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
+	InitPathfinding( GENERATED_WALKABLE_TEXTURE_FILE_PATH );
 }
 
 void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath )
@@ -55,7 +67,7 @@ void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath 
 		for (int x = 0; x < boardWidth; x += widthStep)
 		{
 			tColor color = cGameRenderer::GetInstance()->GetRGBA( walkableMapTextureFilePath, x, y );
-			
+
 			if (color.r > threshold)
 			{
 				tPoint* newGridPoint = snew tPoint();
@@ -73,7 +85,7 @@ void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath 
 		}
 	}
 
-	const int maxCost = 100.f;
+	const int maxCost = 500.f;
 	//edges cost correction
 	for (auto& gridPoint : m_boardGrid)
 	{
@@ -100,6 +112,7 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 
 		if (std::abs( y - m_boardGrid[m]->pos.y ) < tolerance)
 		{
+			y = m_boardGrid[m]->pos.y;
 			found = true;
 			break;
 		}
@@ -119,8 +132,8 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 	l = m;
 	r = m;
 
-	while( l > 0 && std::abs( y - m_boardGrid[l-1]->pos.y ) < tolerance ) l--;
-	while( r < n-1 && std::abs( y - m_boardGrid[r+1]->pos.y ) < tolerance ) r++;
+	while( l > 0 && std::abs( y - m_boardGrid[l-1]->pos.y ) <= FLT_EPSILON ) l--;
+	while( r < n-1 && std::abs( y - m_boardGrid[r+1]->pos.y ) <= FLT_EPSILON ) r++;
 
 	found	= false;
 
@@ -233,14 +246,16 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 		if( current.first == end )
 			break;
 
+		float costSoFar = costMap[current.first];
+
 		for (const auto& neighbour : current.first->neighbours)
 		{
-			float newCostSoFar = costMap[current.first] + neighbour->cost;
+			float newCostSoFar = costSoFar + neighbour->cost + neighbour->visitCost;
 						
 			if (costMap.count(neighbour) == 0u || newCostSoFar < costMap[neighbour])
 			{
 				costMap[neighbour] = newCostSoFar;
-				frontier.push( std::pair<tPoint*, float>( neighbour, heuristic( neighbour, end ) ) );
+				frontier.push( std::pair<tPoint*, float>( neighbour, newCostSoFar + heuristic( neighbour, end ) ) );
 				visitMap[neighbour] = current.first;
 			}
 		}
@@ -255,6 +270,7 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 
 	while (trav != start)
 	{
+		trav->visitCost += 15.f;
 		path.push_back( trav->pos );
 		trav = visitMap[trav];
 	}
@@ -267,12 +283,12 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 
 void cGameBoard::Update(float deltaTime)
 {
-	//m_currPath	= FindPathBFS( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
-	//m_currPath2	= FindPathAstar( tVector2Df( 315.f, 80.f ), tVector2Df( 525.f, 64.f ) );
 }
 
 void cGameBoard::Draw()
 {
+//#define DEBUG_PATHFINDING
+#ifdef DEBUG_PATHFINDING
 	for (const auto* gridPoint : m_boardGrid)
 	{
 		for (const auto* neighbour : gridPoint->neighbours)
@@ -282,19 +298,5 @@ void cGameBoard::Draw()
 
 		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0x3fffffff );
 	}
-
-	for ( size_t i = 1u; i < m_currPath.size(); i++ )
-	{
-		cGameRenderer::GetInstance()->DrawImmediate( m_currPath[i-1], 0xff0000ff );
-		cGameRenderer::GetInstance()->DrawLine( m_currPath[i-1], m_currPath[i], 0xff0000ff );
-	}
-
-	for ( size_t i = 1u; i < m_currPath2.size(); i++ )
-	{
-		cGameRenderer::GetInstance()->DrawImmediate( m_currPath2[i-1], 0xff00ff00 );
-		cGameRenderer::GetInstance()->DrawLine( m_currPath2[i-1], m_currPath2[i], 0xff00ff00 );
-	}
-
-	cGameRenderer::GetInstance()->DrawImmediate( tVector2Df( 315.f, 80.f ), 0xffff0000 );
-	cGameRenderer::GetInstance()->DrawImmediate( tVector2Df( 525.f, 64.f ), 0xffff0000 );
+#endif
 }

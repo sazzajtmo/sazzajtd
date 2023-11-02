@@ -59,6 +59,9 @@
     <ClInclude Include="GameBoardGenerator.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameLog.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SazzajTD.cpp">
@@ -95,6 +98,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameBoardGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
