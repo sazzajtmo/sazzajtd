@@ -13,12 +13,12 @@ public:
 	static	cGameLog*		GetInstance();
 	static	void			DestroyInstance();
 
-			void			Print( const std::wstring& format, ... );
+			void			Print( const std::string& format, ... );
 
 private:
 	static	cGameLog*		s_instance;
 };
 
-
+#define GAME_LOG cGameLog::GetInstance()->Print
 
 #endif

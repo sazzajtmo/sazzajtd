@@ -2,6 +2,8 @@
 #include <cmath>
 #include <algorithm>
 #include <queue>
+#include <chrono>
+#include <ctime>
 #include "GameRenderer.h"
 #include "MemHelper.h"
 #include "GameBoardGenerator.h"
@@ -27,19 +29,34 @@ void cGameBoard::Cleanup()
 
 void cGameBoard::Init()
 {
+	Cleanup();
+
+	using namespace std::chrono;
+	std::time_t currentTime_t = system_clock::to_time_t(system_clock::now());
+	m_boardName = "board_" + std::to_string(currentTime_t);
+
+	std::string boardNameTextureFileName			= m_boardName + ".png";
+	std::string boardNameWalkableTextureFileName	= m_boardName + "_WalkMask.png";
+
 	const int tileSize	= 24;
 	const int boardRows	= 20;
 	const int boardCols = 27;
 	const int junctions	= 3 + std::rand() % 7;
 
-	GameBoardGenerator::CreateGameBoard( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
-	InitPathfinding( GENERATED_WALKABLE_TEXTURE_FILE_PATH );
+	auto grid = CreateGameBoard( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
+
+	cGameRenderer::GetInstance()->ExportGridToFile(grid, tileSize, m_boardName);
+	cGameRenderer::GetInstance()->SetBackground(boardNameTextureFileName);
+	
+	InitPathfinding(grid, tileSize);
+	//InitPathfinding(boardNameWalkableTextureFileName);
 }
 
 void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath )
 {
 	if (!cGameRenderer::GetInstance()->LoadCustomSurface( walkableMapTextureFilePath ))
 	{
+		GAME_LOG("GameBoard::InitPathfinding >> Cannot open walkable mask surface.");
 		return;
 	}
 
@@ -85,11 +102,75 @@ void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath 
 		}
 	}
 
-	const int maxCost = 500.f;
+	const float maxCost = 500.f;
 	//edges cost correction
 	for (auto& gridPoint : m_boardGrid)
 	{
 		float newCost = maxCost * ( ( 8.f - 1.f * gridPoint->neighbours.size() ) / 8.f );
+		gridPoint->cost = newCost;
+	}
+}
+
+void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, int tileSize )
+{
+	if (grid.size() == 0u)
+		return;
+
+	auto linkNeighbours = [this]( tPoint* gridPoint, int x, int y, const std::vector<std::vector<int>>& neighboursIndices, const std::vector<std::vector<int8_t>>& grid )
+	{
+		if (y < 0 || x >= neighboursIndices[0].size() || grid[y][x] == 0u)
+			return;
+
+		int boardCellIdx = neighboursIndices[y][x];
+		
+		if (boardCellIdx == -1)
+			return;
+
+		tPoint* neighbor = m_boardGrid[boardCellIdx];
+
+		if (neighbor)
+		{
+			neighbor->neighbours.push_back(gridPoint);
+			gridPoint->neighbours.push_back(neighbor);
+		}
+	};
+
+	const int	rows		= (int) grid.size();
+	const int	cols		= (int) grid[0].size();
+
+	std::vector<std::vector<int>> neighbours( rows, std::vector<int>(cols, -1) );
+
+	for( int y = 0; y < rows; y++ )
+	{
+		for( int x = 0; x < cols; x++ )
+		{
+			if (grid[y][x] == 0u 
+				&& ( y == 0 || grid[y-1][x] == 0u )
+				&& ( x == 0 || grid[y][x-1] == 0u ))
+				continue;
+
+			tPoint* newGridPoint = snew tPoint();
+			newGridPoint->pos.x = static_cast<float>( tileSize * x );
+			newGridPoint->pos.y = static_cast<float>( tileSize * y );
+			newGridPoint->cost = 0.f;//std::rand() % 100;//( ( color.r - threshold ) / ( 1.f - threshold ) ) * 10.f;
+
+			linkNeighbours(newGridPoint, x - 1	, y		, neighbours, grid);	//W
+			linkNeighbours(newGridPoint, x - 1	, y - 1	, neighbours, grid);	//NW
+			linkNeighbours(newGridPoint, x		, y - 1	, neighbours, grid);	//N
+
+			if( y > 0 && grid[y-1][x] != 0u )
+				linkNeighbours(newGridPoint, x + 1	, y - 1	, neighbours, grid);	//NE
+
+			m_boardGrid.push_back(newGridPoint);
+			neighbours[y][x] = m_boardGrid.size() - 1;
+		}
+	}
+
+	const float maxCost = 500.f;
+	//edges cost correction
+	for (auto& gridPoint : m_boardGrid)
+	{
+		float newCost = maxCost * ((8.f - 1.f * gridPoint->neighbours.size()) / 8.f);
 		gridPoint->cost = newCost;
 	}
 }
@@ -211,8 +292,8 @@ std::vector<tVector2Df> cGameBoard::FindPathBFS(const tVector2Df& startPos, cons
 
 std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, const tVector2Df& endPos) const
 {
-	tPoint* start	= FindGridPoint( startPos.x, startPos.y );
-	const tPoint* end		= FindGridPoint( endPos.x, endPos.y );
+	tPoint*			start	= FindGridPoint( startPos.x, startPos.y );
+	const tPoint*	end		= FindGridPoint( endPos.x, endPos.y );
 
 	if( !start || !end )
 		return {};	
@@ -242,6 +323,8 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 	{
 		current = frontier.top();
 		frontier.pop();
+
+		//const auto [point, prio] = current;
 
 		if( current.first == end )
 			break;
@@ -287,7 +370,7 @@ void cGameBoard::Update(float deltaTime)
 
 void cGameBoard::Draw()
 {
-//#define DEBUG_PATHFINDING
+#define DEBUG_PATHFINDING
 #ifdef DEBUG_PATHFINDING
 	for (const auto* gridPoint : m_boardGrid)
 	{
@@ -299,4 +382,82 @@ void cGameBoard::Draw()
 		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0x3fffffff );
 	}
 #endif
+}
+
+std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int rows, int cols, int numJunctions, tVector2Df& entryPointF, tVector2Df& exitPointF)
+{
+	std::vector<std::vector<int8_t>> grid(rows, std::vector<int8_t>(cols));
+
+	for (auto& gridLine : grid)
+		memset(gridLine.data(), 0, gridLine.size());
+
+	std::pair<int, int> entryPoint = { std::rand() % rows, 0 };
+
+	std::vector<std::pair<int, int>> junctions;
+
+	for (int i = 0; i < numJunctions; i++)
+	{
+		junctions.push_back({ (std::rand() % (rows - 2)) + 1, (std::rand() % (cols - 2)) + 1 });
+	}
+
+	std::sort(junctions.begin(), junctions.end(), [entryPoint](const std::pair<int, int>& lh, const std::pair<int, int>& rh)
+		{
+			return (abs(entryPoint.first - lh.first) + abs(entryPoint.second - lh.second)) < (abs(entryPoint.first - rh.first) + abs(entryPoint.second - rh.second));
+		});
+
+	junctions.insert(junctions.begin(), entryPoint);
+
+	//exit point is last junction position projected on the right edge of the board
+	std::pair<int, int> exitPoint = junctions.back();
+	exitPoint.second = cols - 1;
+	junctions.push_back(exitPoint);
+
+	grid[entryPoint.first][entryPoint.second] = 1;
+	grid[exitPoint.first][exitPoint.second] = 1;
+
+	auto linkJunctions = [&grid](const std::pair<int, int>& linkFrom, const std::pair<int, int>& linkTo)
+		{
+			int yJunc = linkFrom.first;
+
+			while (yJunc != linkTo.first)
+			{
+				grid[yJunc][linkFrom.second] = 1;
+				yJunc += yJunc > linkTo.first ? -1 : 1;
+			}
+
+			int xJunc = linkFrom.second;
+
+			while (xJunc != linkTo.second)
+			{
+				grid[linkTo.first][xJunc] = 1;
+				xJunc += xJunc > linkTo.second ? -1 : 1;
+			}
+		};
+
+	//generate a simple path through junctions connecting entry and exit points
+	for (int i = 1; i < (int)junctions.size(); i++)
+		linkJunctions(junctions[i], junctions[i - 1]);
+
+	//generate link between junctions to create cycles
+	for (int i = 1; i < (int)junctions.size() - 2; i++)
+		linkJunctions(junctions[i], junctions[i + 1]);
+
+	//debugging
+	for (int i = 1; i < (int)junctions.size(); i++)
+	{
+		const auto& junction = junctions[i];
+
+		grid[junction.first][junction.second] = 2;
+	}
+
+	float smallError = 0.f;// tileSize * 0.2f;
+
+	//yes inverted because I'm stupid
+	entryPointF.y = static_cast<float>(entryPoint.first * tileSize + smallError );
+	entryPointF.x = static_cast<float>(entryPoint.second * tileSize + smallError );
+
+	exitPointF.y = static_cast<float>(exitPoint.first * tileSize + smallError );
+	exitPointF.x = static_cast<float>(exitPoint.second * tileSize + smallError );
+
+	return grid;
 }

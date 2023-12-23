@@ -36,21 +36,20 @@ void cGameLog::DestroyInstance()
 	}
 }
 
-void cGameLog::Print(const std::wstring& fmt, ... )
+void cGameLog::Print(const std::string& fmt, ... )
 {
-	wchar_t szBuffer[MAX_LOG_SIZE] = { 0 };
+	char szBuffer[MAX_LOG_SIZE] = { 0 };
 
 	va_list args;
 	va_start(args, fmt.c_str());
-	
-	_vsnwprintf_s( szBuffer, MAX_LOG_SIZE - 2u, _TRUNCATE, fmt.c_str(), args);//-3 to leave room for \r\n at the very end
-	size_t bufferLen = wcsnlen_s(szBuffer, _TRUNCATE);
-	_vsnwprintf_s( szBuffer + bufferLen, MAX_LOG_SIZE - bufferLen - 1, MAX_LOG_SIZE - bufferLen - 1, L"\n", args);
+	_vsnprintf_s( szBuffer, MAX_LOG_SIZE - 2u, _TRUNCATE, fmt.c_str(), args);//-3 to leave room for \r\n at the very end
+	size_t bufferLen = strnlen_s(szBuffer, _TRUNCATE);
+	_vsnprintf_s( szBuffer + bufferLen, MAX_LOG_SIZE - bufferLen - 1, MAX_LOG_SIZE - bufferLen - 1, "\n", args);
 	va_end(args);
 
-	//std::cout << szBuffer << std::endl;
+	std::cout << szBuffer;	//for console
 
-#ifdef _WINDOWS
-	OutputDebugString( szBuffer );
+#ifdef _WIN32
+	OutputDebugStringA( szBuffer );
 #endif
 }

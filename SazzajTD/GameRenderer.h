@@ -12,6 +12,8 @@ struct SDL_Window;
 struct SDL_Surface;
 struct SDL_Texture;
 
+
+
 class cGameRenderer final
 {
 private:
@@ -67,12 +69,15 @@ public:
 	SDL_Texture*			GetSDLTexture( const std::string& pathToFile );
 	void					SetBackground( const std::string& pathToFileTexture );
 
-	void					ExportGridToFile( const std::vector<std::vector<int8_t>>& grid, int tileSize );
+	void					ExportGridToFile( const std::vector<std::vector<int8_t>>& grid, int tileSize, const std::string& gridName );
+
+	static void				DestroyRenderImplementation( SDL_Renderer* renderer );
 
 private:
 	static cGameRenderer*	s_instance;
 
-	SDL_Renderer*			m_renderer		= nullptr;
+	std::unique_ptr<SDL_Renderer, decltype(&DestroyRenderImplementation)>			
+							m_renderer		= { nullptr, DestroyRenderImplementation };
 
 	//TODO merge these together
 	std::vector<tDrawBit>	m_renderedBits;

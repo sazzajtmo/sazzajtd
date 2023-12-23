@@ -25,6 +25,7 @@ public:
 
 			void					Init() override;
 			void					InitPathfinding( const std::string& walkableMapTextureFilePath );
+			void					InitPathfinding( const std::vector<std::vector<int8_t>>& grid, int tileSize );
 			tPoint*					FindGridPoint( float x, float y, float tolerance = 10.f ) const;
 
 			std::vector<tVector2Df>	FindPathBFS( const tVector2Df& start, const tVector2Df& end ) const;
@@ -36,12 +37,19 @@ public:
 	inline	const tVector2Df&		GetEntryPoint() const	{ return m_entryPoint; }
 	inline	const tVector2Df&		GetExitPoint() const	{ return m_exitPoint; }
 
-private:
-		std::vector<tPoint*>	m_boardGrid;
-		tPoint					m_nullPoint;
+	static	std::vector<std::vector<int8_t>> 
+									CreateGameBoard(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint);
 
-		tVector2Df				m_entryPoint;
-		tVector2Df				m_exitPoint;
+	inline	std::string				GetBoardName() const	{ return m_boardName;  }
+
+private:
+			std::vector<tPoint*>	m_boardGrid;
+			tPoint					m_nullPoint;
+
+			tVector2Df				m_entryPoint;
+			tVector2Df				m_exitPoint;
+
+			std::string				m_boardName	= "";
 		
 };
 

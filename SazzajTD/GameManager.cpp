@@ -37,10 +37,20 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
-	m_gameBoard.reset( snew cGameBoard() );
-	m_gameBoard->Init();
+	for (auto& gameObject : m_gameObjects)
+	{
+		DespawnObject( gameObject );
+	}
 
-	cGameRenderer::GetInstance()->SetBackground( GENERATED_BOARD_TEXTURE_FILE_PATH );
+	if (m_gameBoard.get())
+	{
+		m_gameBoard->Cleanup();
+		m_gameBoard.reset();
+	}
+
+	m_gameBoard = std::make_unique<cGameBoard>();
+	m_gameBoard->Init();
+	
 
 	//SpawnObject<cAIUnit>();
 	//SpawnObject<cPlayerUnit>();
@@ -72,6 +82,15 @@ void cGameManager::DespawnObject(cGameObject* gameObject)
 
 void cGameManager::Update(float deltaTime)
 {
+	m_changeBoardTimer -= deltaTime;
+
+	if (m_changeBoardTimer <= 0.f)
+	{
+		m_changeBoardTimer = 10.f;
+		//Init();
+		return;
+	}
+
 	//should use index rather than pointers
 	for (auto& gameObject : m_despawnList)
 	{

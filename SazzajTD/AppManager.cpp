@@ -51,7 +51,7 @@ bool cAppManager::Init()
 		return false;
 	}
 
-	const int width		= 640;
+	const int width		= 648;
 	const int height	= 480; 
 
 	m_window = SDL_CreateWindow( m_appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);

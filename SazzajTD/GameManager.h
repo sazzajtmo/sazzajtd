@@ -45,7 +45,8 @@ private:
 
 			std::shared_ptr<cGameBoard>		m_gameBoard;
 
-			float							m_spawnTimer = 0.f;
+			float							m_spawnTimer		= 0.f;
+			float							m_changeBoardTimer	= 10.f;
 };
 
 #endif

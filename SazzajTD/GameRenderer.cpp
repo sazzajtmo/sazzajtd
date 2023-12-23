@@ -39,7 +39,7 @@ bool cGameRenderer::Init( SDL_Window* window )
 	if( !window )
 		return false;
 
-	m_renderer = SDL_CreateRenderer( window, 0, SDL_RENDERER_PRESENTVSYNC );
+	m_renderer.reset( SDL_CreateRenderer(window, 0, SDL_RENDERER_PRESENTVSYNC) );
 
 	if (!m_renderer)
 	{
@@ -55,8 +55,6 @@ bool cGameRenderer::Init( SDL_Window* window )
 
 void cGameRenderer::Cleanup()
 {
-	SDL_DestroyRenderer( m_renderer );
-
 	if( m_bgTexture )
 		SDL_DestroyTexture( m_bgTexture );
 
@@ -70,13 +68,13 @@ void cGameRenderer::RenderBegin()
 	if( !m_renderer )
 		return;
 
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-	SDL_RenderClear(m_renderer);
+	SDL_SetRenderDrawColor(m_renderer.get(), 0, 0, 0, 255);
+	SDL_RenderClear(m_renderer.get());
 }
 
 void cGameRenderer::Render()
 {
-	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawBlendMode(m_renderer.get(), SDL_BLENDMODE_BLEND);
 
 	//SDL_Rect drawRect;
 	//drawRect.x = 40;
@@ -92,13 +90,13 @@ void cGameRenderer::Render()
 
 	if (m_bgTexture)
 	{
-		SDL_RenderCopy( m_renderer, m_bgTexture, 0, 0 );
+		SDL_RenderCopy( m_renderer.get(), m_bgTexture, 0, 0 );
 	}
 
 	for (const auto& line : m_renderedLines)
 	{
-		SDL_SetRenderDrawColor( m_renderer, static_cast<int>( line.color.r * 255.f ), static_cast<int>( line.color.g * 255.f ), static_cast<int>( line.color.b * 255.f ), static_cast<int>( line.color.a * 255.f ) );
-		SDL_RenderDrawLineF( m_renderer, line.start.x, line.start.y, line.end.x, line.end.y );
+		SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( line.color.r * 255.f ), static_cast<int>( line.color.g * 255.f ), static_cast<int>( line.color.b * 255.f ), static_cast<int>( line.color.a * 255.f ) );
+		SDL_RenderDrawLineF( m_renderer.get(), line.start.x, line.start.y, line.end.x, line.end.y );
 	}
 
 	SDL_Rect bitRect;
@@ -110,8 +108,8 @@ void cGameRenderer::Render()
 		bitRect.x = static_cast<int>( bit.transform.position.x - static_cast<float>( bitRect.w ) * 0.5f );
 		bitRect.y = static_cast<int>( bit.transform.position.y - static_cast<float>( bitRect.h ) * 0.5f );
 
-		SDL_SetRenderDrawColor( m_renderer, static_cast<int>( bit.color.r * 255.f ), static_cast<int>( bit.color.g * 255.f ), static_cast<int>( bit.color.b * 255.f ), static_cast<int>( bit.color.a * 255.f ) );
-		SDL_RenderFillRect( m_renderer, &bitRect );
+		SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( bit.color.r * 255.f ), static_cast<int>( bit.color.g * 255.f ), static_cast<int>( bit.color.b * 255.f ), static_cast<int>( bit.color.a * 255.f ) );
+		SDL_RenderFillRect( m_renderer.get(), &bitRect );
 	}
 
 	SDL_Rect clipRect, posRect;
@@ -128,7 +126,7 @@ void cGameRenderer::Render()
 		posRect.w = static_cast<int>( tex.pos.w );
 		posRect.h = static_cast<int>( tex.pos.h );
 
-		SDL_RenderCopy( m_renderer, tex.tex, &clipRect, &posRect );
+		SDL_RenderCopy( m_renderer.get(), tex.tex, &clipRect, &posRect );
 	}
 
 	m_renderedTextures.clear();
@@ -141,7 +139,7 @@ void cGameRenderer::RenderEnd()
 	if( !m_renderer )
 		return;
 
-	SDL_RenderPresent(m_renderer);
+	SDL_RenderPresent(m_renderer.get());
 }
 
 void cGameRenderer::DrawImmediate(const tGameTransform& transform, const tColor& color)
@@ -262,7 +260,7 @@ SDL_Texture* cGameRenderer::GetSDLTexture(const std::string& pathToFile)
 	if( !surface )
 		return nullptr;
 
-	return SDL_CreateTextureFromSurface( m_renderer, surface );
+	return SDL_CreateTextureFromSurface( m_renderer.get(), surface );
 }
 
 void cGameRenderer::SetBackground(const std::string& pathToFileTexture)
@@ -277,18 +275,21 @@ void cGameRenderer::SetBackground(const std::string& pathToFileTexture)
 
 	if (bgSurface)
 	{
-		m_bgTexture = SDL_CreateTextureFromSurface( m_renderer, bgSurface );
+		m_bgTexture = SDL_CreateTextureFromSurface( m_renderer.get(), bgSurface );
 		SDL_FreeSurface( bgSurface );
 	}
 }
 
-void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& grid, int tileSize)
+void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& grid, int tileSize, const std::string& gridName)
 {
-	SDL_Texture* walkableTexture = SDL_CreateTexture( m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * grid[0].size(), tileSize * grid.size() );
+	std::string gridTextureFileName			= gridName + ".png";
+	std::string gridWalkableTextureFileName = gridName + "_WalkMask.png";
 
-	SDL_SetRenderTarget(m_renderer, walkableTexture);
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 0);
-	SDL_RenderClear(m_renderer);
+	SDL_Texture* walkableTexture = SDL_CreateTexture( m_renderer.get(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * grid[0].size(), tileSize * grid.size() );
+
+	SDL_SetRenderTarget(m_renderer.get(), walkableTexture);
+	SDL_SetRenderDrawColor(m_renderer.get(), 0, 0, 0, 0);
+	SDL_RenderClear(m_renderer.get());
 
 	const int numRows = (int) grid.size();
 	const int numCols = (int) grid[0].size();
@@ -304,18 +305,18 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 			bitRect.x = tileSize * x;
 			bitRect.y = tileSize * y;
 
-			SDL_SetRenderDrawColor( m_renderer, static_cast<int>( cellColor.r * 255.f ), static_cast<int>( cellColor.g * 255.f ), static_cast<int>( cellColor.b * 255.f ), static_cast<int>( cellColor.a * 255.f ) );
-			SDL_RenderFillRect( m_renderer, &bitRect );
+			SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( cellColor.r * 255.f ), static_cast<int>( cellColor.g * 255.f ), static_cast<int>( cellColor.b * 255.f ), static_cast<int>( cellColor.a * 255.f ) );
+			SDL_RenderFillRect( m_renderer.get(), &bitRect );
 		}
 	}
 
 
 	//save to texture part
 	SDL_Surface* surface = SDL_CreateRGBSurface( 0, tileSize * numCols, tileSize * numRows, 32, 0, 0, 0, 0 );
-	SDL_RenderReadPixels( m_renderer, 0, surface->format->format, surface->pixels, surface->pitch );
-	IMG_SavePNG( surface, GENERATED_WALKABLE_TEXTURE_FILE_PATH );
+	SDL_RenderReadPixels( m_renderer.get(), 0, surface->format->format, surface->pixels, surface->pitch );
+	IMG_SavePNG( surface, gridWalkableTextureFileName.c_str() );
 	
-	SDL_SetRenderTarget(m_renderer, nullptr);
+	SDL_SetRenderTarget(m_renderer.get(), nullptr);
 	SDL_FreeSurface( surface );
 	SDL_DestroyTexture( walkableTexture );
 	//
@@ -351,12 +352,12 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 
 	const int numGrassTextures = (int) grassTextures.size();
 
-	SDL_Texture* texture = SDL_CreateTexture( m_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * numCols, tileSize * numRows );
+	SDL_Texture* texture = SDL_CreateTexture( m_renderer.get(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * numCols, tileSize * numRows );
 
-	SDL_SetRenderTarget(m_renderer, texture);
-	SDL_SetRenderDrawColor(m_renderer, 0, 0, 0, 255);
-	SDL_SetRenderDrawBlendMode(m_renderer, SDL_BLENDMODE_BLEND);
-	SDL_RenderClear(m_renderer);
+	SDL_SetRenderTarget(m_renderer.get(), texture);
+	SDL_SetRenderDrawColor(m_renderer.get(), 0, 0, 0, 255);
+	SDL_SetRenderDrawBlendMode(m_renderer.get(), SDL_BLENDMODE_BLEND);
+	SDL_RenderClear(m_renderer.get());
 
 	SDL_Rect posRect;
 
@@ -369,7 +370,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 			posRect.w = tileSize;
 			posRect.h = tileSize;
 			SDL_Texture* tileTexture = std::rand() % 100 > 80 ? grassTextures[rand()%numGrassTextures] : simpleGrass;
-			SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
+			SDL_RenderCopy( m_renderer.get(), tileTexture, nullptr, &posRect );
 		}
 	}
 
@@ -399,7 +400,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 		posRect.w = tileSize;
 		posRect.h = tileSize;
 		SDL_Texture* tileTexture = std::rand() % 100 > 80 ? decorationTextures[rand()%2] : decorationTextures[0];
-		SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
+		SDL_RenderCopy( m_renderer.get(), tileTexture, nullptr, &posRect );
 	}
 
 	for (int y = 0; y < (int)grid.size(); y++)
@@ -427,17 +428,22 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 			posRect.w = tileSize;
 			posRect.h = tileSize;
 
-			SDL_RenderCopy( m_renderer, tileTexture, nullptr, &posRect );
+			SDL_RenderCopy( m_renderer.get(), tileTexture, nullptr, &posRect );
 		}
 	}
 
 	//save to texture part
 	SDL_Surface* surfaceRGB = SDL_CreateRGBSurface( 0, tileSize * grid[0].size(), tileSize * grid.size(), 32, 0, 0, 0, 0 );
-	SDL_RenderReadPixels( m_renderer, 0, surfaceRGB->format->format, surfaceRGB->pixels, surfaceRGB->pitch );
-	IMG_SavePNG( surfaceRGB, GENERATED_BOARD_TEXTURE_FILE_PATH );
+	SDL_RenderReadPixels( m_renderer.get(), 0, surfaceRGB->format->format, surfaceRGB->pixels, surfaceRGB->pitch );
+	IMG_SavePNG( surfaceRGB, gridTextureFileName.c_str() );
 	
-	SDL_SetRenderTarget(m_renderer, nullptr);
+	SDL_SetRenderTarget(m_renderer.get(), nullptr);
 	SDL_FreeSurface( surfaceRGB );
 	SDL_DestroyTexture( texture );
 	//
+}
+
+void cGameRenderer::DestroyRenderImplementation(SDL_Renderer* renderer)
+{
+	SDL_DestroyRenderer( renderer );
 }
