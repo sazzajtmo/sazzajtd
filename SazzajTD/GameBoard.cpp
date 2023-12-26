@@ -162,7 +162,7 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 				linkNeighbours(newGridPoint, x + 1	, y - 1	, neighbours, grid);	//NE
 
 			m_boardGrid.push_back(newGridPoint);
-			neighbours[y][x] = m_boardGrid.size() - 1;
+			neighbours[y][x] = static_cast<int>(m_boardGrid.size() - 1);
 		}
 	}
 

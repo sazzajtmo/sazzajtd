@@ -7,6 +7,7 @@
 #include "GameManager.h"
 #include "GameRenderer.h"
 #include "GameInputManager.h"
+#include "GameUI.h"
 #include "MemHelper.h"
 
 #pragma comment( lib, "SDL2.lib" )
@@ -51,8 +52,9 @@ bool cAppManager::Init()
 		return false;
 	}
 
-	const int width		= 648;
-	const int height	= 480; 
+	const int topMenuOffset = 30;
+	const int width			= 648;
+	const int height		= 480 + topMenuOffset;
 
 	m_window = SDL_CreateWindow( m_appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, 0);
 
@@ -63,19 +65,22 @@ bool cAppManager::Init()
 	}
 
 	cGameInputManager::GetInstance();
-	cGameRenderer::GetInstance()->Init( m_window );
+	cGameRenderer::GetInstance()->Init( m_window, tVector2Df( 0.f, topMenuOffset ) );
 
 	if( !cGameManager::GetInstance()->Init() )
 	{
 		SDL_Log( "cGameManager::GetInstance()->Init() failed");
 		return false;
 	}
+
+	cGameUI::GetInstance()->Init(m_window, cGameRenderer::GetInstance()->GetRenderImplemention());
 		
 	return true;
 }
 
 void cAppManager::Cleanup()
 {
+	cGameUI::DestroyInstance();
 	cGameManager::DestroyInstance();
 	cGameInputManager::DestroyInstance();
 	cGameRenderer::DestroyInstance();
@@ -98,8 +103,14 @@ void cAppManager::MainLoop()
 	while (keep_going) {
 
 		/* run through all pending events until we run out. */
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
+		cGameUI::GetInstance()->InputBegin();
+
+		while (SDL_PollEvent(&event)) 
+		{
+			cGameUI::GetInstance()->InputHandle(&event);
+
+			switch (event.type) 
+			{
 				case SDL_EventType::SDL_QUIT:  /* triggers on last window close and other things. End the program. */
 					keep_going = SDL_FALSE;
 				break;
@@ -125,8 +136,10 @@ void cAppManager::MainLoop()
 					mouseposrect.x = event.motion.x - (mouseposrect.w / 2);
 					mouseposrect.y = event.motion.y - (mouseposrect.h / 2);
 				break;
-				}
+			}
 		}
+		cGameUI::GetInstance()->InputEnd();
+
 
 		Uint64	deltaTicks	= SDL_GetTicks64() - lastTick;
 		float	deltaTime	= deltaTicks / 1000.f;
@@ -135,8 +148,11 @@ void cAppManager::MainLoop()
 		cGameManager::GetInstance()->Draw();
 		//SDL_Log( "delta %0.3f", deltaTime );
 
+		cGameUI::GetInstance()->Update(deltaTime);
+
 		cGameRenderer::GetInstance()->RenderBegin();
 		cGameRenderer::GetInstance()->Render();
+		cGameUI::GetInstance()->Draw();
 		cGameRenderer::GetInstance()->RenderEnd();		
 
 		lastTick = SDL_GetTicks64();

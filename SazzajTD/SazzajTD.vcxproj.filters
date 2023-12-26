@@ -62,6 +62,9 @@
     <ClInclude Include="GameLog.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameUI.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SazzajTD.cpp">
@@ -103,6 +106,9 @@
     <ClCompile Include="GameLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GameUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SazzajTD.rc">
@@ -116,5 +122,10 @@
     <Image Include="SazzajTD.ico">
       <Filter>Resource Files</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="todo.txt">
+      <Filter>Source Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

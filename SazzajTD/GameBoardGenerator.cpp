@@ -71,7 +71,7 @@ std::vector<std::vector<int8_t>> GameBoardGenerator::CreateGameBoard(int tileSiz
 		grid[junction.first][junction.second] = 2;
 	}
 
-	cGameRenderer::GetInstance()->ExportGridToFile( grid, tileSize );
+	cGameRenderer::GetInstance()->ExportGridToFile( grid, tileSize, "oldgridname" );
 
 	//yes inverted because I'm stupid
 	entryPointF.y = static_cast<float>( entryPoint.first * tileSize + tileSize / 2 );

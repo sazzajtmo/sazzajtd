@@ -34,7 +34,7 @@ void cGameRenderer::DestroyInstance()
 	}
 }
 
-bool cGameRenderer::Init( SDL_Window* window )
+bool cGameRenderer::Init( SDL_Window* window, const tVector2Df& renderOffset )
 {
 	if( !window )
 		return false;
@@ -46,6 +46,9 @@ bool cGameRenderer::Init( SDL_Window* window )
 		SDL_Log( "SDL_CreateRenderer failed %s", SDL_GetError() );
 		return false;
 	}
+
+	SDL_GetWindowSize(window, &m_width, &m_height);
+	m_renderOffset = renderOffset;
 
 	//no background
 	//SetBackground( "background.bmp" );
@@ -90,13 +93,20 @@ void cGameRenderer::Render()
 
 	if (m_bgTexture)
 	{
-		SDL_RenderCopy( m_renderer.get(), m_bgTexture, 0, 0 );
+		SDL_Rect posRect;
+
+		posRect.x = static_cast<int>(0			+ m_renderOffset.x);
+		posRect.y = static_cast<int>(0			+ m_renderOffset.y);
+		posRect.w = static_cast<int>(m_width	- m_renderOffset.x);
+		posRect.h = static_cast<int>(m_height	- m_renderOffset.y);
+
+		SDL_RenderCopy( m_renderer.get(), m_bgTexture, 0, &posRect);
 	}
 
 	for (const auto& line : m_renderedLines)
 	{
 		SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( line.color.r * 255.f ), static_cast<int>( line.color.g * 255.f ), static_cast<int>( line.color.b * 255.f ), static_cast<int>( line.color.a * 255.f ) );
-		SDL_RenderDrawLineF( m_renderer.get(), line.start.x, line.start.y, line.end.x, line.end.y );
+		SDL_RenderDrawLineF( m_renderer.get(), line.start.x + m_renderOffset.x, line.start.y + m_renderOffset.y, line.end.x + m_renderOffset.x, line.end.y + m_renderOffset.y );
 	}
 
 	SDL_Rect bitRect;
@@ -105,8 +115,8 @@ void cGameRenderer::Render()
 	{
 		bitRect.w = (int) bit.transform.scale * 4;
 		bitRect.h = (int) bit.transform.scale * 4;
-		bitRect.x = static_cast<int>( bit.transform.position.x - static_cast<float>( bitRect.w ) * 0.5f );
-		bitRect.y = static_cast<int>( bit.transform.position.y - static_cast<float>( bitRect.h ) * 0.5f );
+		bitRect.x = static_cast<int>( bit.transform.position.x - static_cast<float>( bitRect.w ) * 0.5f ) + m_renderOffset.x;
+		bitRect.y = static_cast<int>( bit.transform.position.y - static_cast<float>( bitRect.h ) * 0.5f ) + m_renderOffset.y;
 
 		SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( bit.color.r * 255.f ), static_cast<int>( bit.color.g * 255.f ), static_cast<int>( bit.color.b * 255.f ), static_cast<int>( bit.color.a * 255.f ) );
 		SDL_RenderFillRect( m_renderer.get(), &bitRect );
@@ -121,8 +131,8 @@ void cGameRenderer::Render()
 		clipRect.w = static_cast<int>( tex.clip.w );
 		clipRect.h = static_cast<int>( tex.clip.h );
 
-		posRect.x = static_cast<int>( tex.pos.x );
-		posRect.y = static_cast<int>( tex.pos.y );
+		posRect.x = static_cast<int>( tex.pos.x + m_renderOffset.x );
+		posRect.y = static_cast<int>( tex.pos.y + m_renderOffset.y );
 		posRect.w = static_cast<int>( tex.pos.w );
 		posRect.h = static_cast<int>( tex.pos.h );
 
@@ -446,4 +456,9 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 void cGameRenderer::DestroyRenderImplementation(SDL_Renderer* renderer)
 {
 	SDL_DestroyRenderer( renderer );
+}
+
+SDL_Renderer* cGameRenderer::GetRenderImplemention()
+{
+	return GetInstance()->m_renderer.get();
 }

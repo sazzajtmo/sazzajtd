@@ -12,8 +12,6 @@ struct SDL_Window;
 struct SDL_Surface;
 struct SDL_Texture;
 
-
-
 class cGameRenderer final
 {
 private:
@@ -50,7 +48,7 @@ public:
 	static cGameRenderer*	GetInstance();
 	static void				DestroyInstance();
 
-	bool					Init( SDL_Window* window );
+	bool					Init( SDL_Window* window, const tVector2Df& renderOffset );
 	void					Cleanup();
 
 	void					RenderBegin();
@@ -72,6 +70,7 @@ public:
 	void					ExportGridToFile( const std::vector<std::vector<int8_t>>& grid, int tileSize, const std::string& gridName );
 
 	static void				DestroyRenderImplementation( SDL_Renderer* renderer );
+	static SDL_Renderer*	GetRenderImplemention();	//bleah
 
 private:
 	static cGameRenderer*	s_instance;
@@ -86,6 +85,10 @@ private:
 
 	std::map< std::string, SDL_Surface* >
 							m_customSurfaces;
+
+	int						m_width			= 0;
+	int						m_height		= 0;
+	tVector2Df				m_renderOffset{ 0.f };
 
 	SDL_Texture*			m_bgTexture		= nullptr;
 };
