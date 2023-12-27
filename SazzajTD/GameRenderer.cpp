@@ -4,7 +4,8 @@
 #include "SDL_image.h"
 #include "SDL_rect.h"
 #include "MemHelper.h"
-#include <set>
+#include <algorithm>
+
 
 cGameRenderer* cGameRenderer::s_instance( nullptr );
 
@@ -91,36 +92,19 @@ void cGameRenderer::Render()
 	//clipRect.w = 120;
 	//clipRect.h = 80;
 
-	if (m_bgTexture)
-	{
-		SDL_Rect posRect;
+	//if (m_bgTexture)
+	//{
+	//	SDL_Rect posRect;
 
-		posRect.x = static_cast<int>(0			+ m_renderOffset.x);
-		posRect.y = static_cast<int>(0			+ m_renderOffset.y);
-		posRect.w = static_cast<int>(m_width	- m_renderOffset.x);
-		posRect.h = static_cast<int>(m_height	- m_renderOffset.y);
+	//	posRect.x = static_cast<int>(0			+ m_renderOffset.x);
+	//	posRect.y = static_cast<int>(0			+ m_renderOffset.y);
+	//	posRect.w = static_cast<int>(m_width	- m_renderOffset.x);
+	//	posRect.h = static_cast<int>(m_height	- m_renderOffset.y);
 
-		SDL_RenderCopy( m_renderer.get(), m_bgTexture, 0, &posRect);
-	}
+	//	SDL_RenderCopy( m_renderer.get(), m_bgTexture, 0, &posRect);
+	//}
 
-	for (const auto& line : m_renderedLines)
-	{
-		SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( line.color.r * 255.f ), static_cast<int>( line.color.g * 255.f ), static_cast<int>( line.color.b * 255.f ), static_cast<int>( line.color.a * 255.f ) );
-		SDL_RenderDrawLineF( m_renderer.get(), line.start.x + m_renderOffset.x, line.start.y + m_renderOffset.y, line.end.x + m_renderOffset.x, line.end.y + m_renderOffset.y );
-	}
-
-	SDL_Rect bitRect;
-
-	for (const auto& bit : m_renderedBits)
-	{
-		bitRect.w = (int) bit.transform.scale * 4;
-		bitRect.h = (int) bit.transform.scale * 4;
-		bitRect.x = static_cast<int>( bit.transform.position.x - static_cast<float>( bitRect.w ) * 0.5f ) + m_renderOffset.x;
-		bitRect.y = static_cast<int>( bit.transform.position.y - static_cast<float>( bitRect.h ) * 0.5f ) + m_renderOffset.y;
-
-		SDL_SetRenderDrawColor( m_renderer.get(), static_cast<int>( bit.color.r * 255.f ), static_cast<int>( bit.color.g * 255.f ), static_cast<int>( bit.color.b * 255.f ), static_cast<int>( bit.color.a * 255.f ) );
-		SDL_RenderFillRect( m_renderer.get(), &bitRect );
-	}
+	std::sort(m_renderedTextures.begin(), m_renderedTextures.end(), [](const tDrawTex& lh, const tDrawTex& rh) { return rh.prio > lh.prio; });
 
 	SDL_Rect clipRect, posRect;
 
@@ -137,6 +121,25 @@ void cGameRenderer::Render()
 		posRect.h = static_cast<int>( tex.pos.h );
 
 		SDL_RenderCopy( m_renderer.get(), tex.tex, &clipRect, &posRect );
+	}
+
+	for (const auto& line : m_renderedLines)
+	{
+		SDL_SetRenderDrawColor(m_renderer.get(), static_cast<int>(line.color.r * 255.f), static_cast<int>(line.color.g * 255.f), static_cast<int>(line.color.b * 255.f), static_cast<int>(line.color.a * 255.f));
+		SDL_RenderDrawLineF(m_renderer.get(), line.start.x + m_renderOffset.x, line.start.y + m_renderOffset.y, line.end.x + m_renderOffset.x, line.end.y + m_renderOffset.y);
+	}
+
+	SDL_Rect bitRect;
+
+	for (const auto& bit : m_renderedBits)
+	{
+		bitRect.w = (int)bit.transform.scale * 4;
+		bitRect.h = (int)bit.transform.scale * 4;
+		bitRect.x = static_cast<int>(bit.transform.position.x - static_cast<float>(bitRect.w) * 0.5f + m_renderOffset.x);
+		bitRect.y = static_cast<int>(bit.transform.position.y - static_cast<float>(bitRect.h) * 0.5f + m_renderOffset.y);
+
+		SDL_SetRenderDrawColor(m_renderer.get(), static_cast<int>(bit.color.r * 255.f), static_cast<int>(bit.color.g * 255.f), static_cast<int>(bit.color.b * 255.f), static_cast<int>(bit.color.a * 255.f));
+		SDL_RenderFillRect(m_renderer.get(), &bitRect);
 	}
 
 	m_renderedTextures.clear();
@@ -170,9 +173,9 @@ void cGameRenderer::DrawLine(const tVector2Df& start, const tVector2Df& end, con
 	m_renderedLines.emplace_back( start, end, color );
 }
 
-void cGameRenderer::DrawTexture(SDL_Texture* tex, const tRectf& clip, const tRectf& pos)
+void cGameRenderer::DrawTexture(SDL_Texture* tex, const tRectf& clip, const tRectf& pos, int prio)
 {
-	m_renderedTextures.emplace_back( tex, clip, pos );
+	m_renderedTextures.emplace_back( tex, clip, pos, prio );
 }
 
 bool cGameRenderer::LoadCustomSurface(const std::string& pathToFile)
@@ -295,20 +298,20 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 	std::string gridTextureFileName			= gridName + ".png";
 	std::string gridWalkableTextureFileName = gridName + "_WalkMask.png";
 
-	SDL_Texture* walkableTexture = SDL_CreateTexture( m_renderer.get(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * grid[0].size(), tileSize * grid.size() );
+	const int numRows = (int) grid.size();
+	const int numCols = (int) grid[0].size();
+
+	SDL_Texture* walkableTexture = SDL_CreateTexture( m_renderer.get(), SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, tileSize * numCols, tileSize * numRows );
 
 	SDL_SetRenderTarget(m_renderer.get(), walkableTexture);
 	SDL_SetRenderDrawColor(m_renderer.get(), 0, 0, 0, 0);
 	SDL_RenderClear(m_renderer.get());
 
-	const int numRows = (int) grid.size();
-	const int numCols = (int) grid[0].size();
-
 	for (int y = 0; y < numRows; y++)
 	{
 		for (int x = 0; x < numCols; x++)
 		{
-			tColor		cellColor = grid[y][x] == 0 ? 0xff0f0f0f : 0xffffffff;
+			tColor		cellColor = grid[y][x] == 1 ? 0xffffffff : 0xff0f0f0f;
 			SDL_Rect	bitRect;
 			bitRect.w = tileSize;
 			bitRect.h = tileSize;
@@ -319,7 +322,6 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 			SDL_RenderFillRect( m_renderer.get(), &bitRect );
 		}
 	}
-
 
 	//save to texture part
 	SDL_Surface* surface = SDL_CreateRGBSurface( 0, tileSize * numCols, tileSize * numRows, 32, 0, 0, 0, 0 );
@@ -417,18 +419,18 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 	{
 		for (int x = 0; x < (int)grid[y].size(); x++)
 		{
-			if (grid[y][x] == 0)
+			if (grid[y][x] != 1)
 				continue;
 
 			std::string roadPrefix = "";
 
-			if( x-1 >= 0 && grid[y][x-1] > 0 )
+			if( x-1 >= 0 && grid[y][x-1] == 1 )
 				roadPrefix += "W";
-			if( y-1 >= 0 && grid[y-1][x] > 0 )
+			if( y-1 >= 0 && grid[y-1][x] == 1)
 				roadPrefix += "N";
-			if (x+1 < (int) grid[y].size() && grid[y][x + 1] > 0)
+			if (x+1 < (int) grid[y].size() && grid[y][x + 1] == 1)
 				roadPrefix += "E";
-			if (y + 1 < (int) grid.size() && grid[y + 1][x] > 0)
+			if (y + 1 < (int) grid.size() && grid[y + 1][x] == 1)
 				roadPrefix += "S";
 
 			SDL_Texture* tileTexture = roadPrefix.empty() ? grassTextures[rand()%3] : roadTextures["road_"+roadPrefix];
@@ -443,7 +445,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 	}
 
 	//save to texture part
-	SDL_Surface* surfaceRGB = SDL_CreateRGBSurface( 0, tileSize * grid[0].size(), tileSize * grid.size(), 32, 0, 0, 0, 0 );
+	SDL_Surface* surfaceRGB = SDL_CreateRGBSurface( 0, tileSize * numCols, tileSize * numRows, 32, 0, 0, 0, 0 );
 	SDL_RenderReadPixels( m_renderer.get(), 0, surfaceRGB->format->format, surfaceRGB->pixels, surfaceRGB->pitch );
 	IMG_SavePNG( surfaceRGB, gridTextureFileName.c_str() );
 	

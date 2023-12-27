@@ -135,6 +135,8 @@ void cAppManager::MainLoop()
 					/* center the square where the mouse is */
 					mouseposrect.x = event.motion.x - (mouseposrect.w / 2);
 					mouseposrect.y = event.motion.y - (mouseposrect.h / 2);
+
+					cGameInputManager::GetInstance()->FeedMouseEvent(event.button.button, event.motion.x, event.motion.y);
 				break;
 			}
 		}

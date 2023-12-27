@@ -65,6 +65,9 @@
     <ClInclude Include="GameUI.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="BuildingUnit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SazzajTD.cpp">
@@ -107,6 +110,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -16,6 +16,7 @@ public:
 	void					Init() override;
 	void					Update( float deltaTime ) override;
 	void					Draw() override;
+	void					DrawDebug() override;
 
 protected:
 	tVector2Df				m_targetPos;
@@ -23,8 +24,6 @@ protected:
 	int						m_currPathPointIdx	= -1;
 
 	int						m_mouseCbHandle		= -1;
-
-	cAnimatedTexture*		m_model				= nullptr;
 	
 };
 

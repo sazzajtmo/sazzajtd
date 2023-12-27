@@ -142,6 +142,7 @@
     <ClInclude Include="AIUnit.h" />
     <ClInclude Include="AnimatedTexture.h" />
     <ClInclude Include="AppManager.h" />
+    <ClInclude Include="BuildingUnit.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameBoard.h" />
     <ClInclude Include="GameBoardGenerator.h" />
@@ -162,6 +163,7 @@
     <ClCompile Include="AIUnit.cpp" />
     <ClCompile Include="AnimatedTexture.cpp" />
     <ClCompile Include="AppManager.cpp" />
+    <ClCompile Include="BuildingUnit.cpp" />
     <ClCompile Include="GameBoard.cpp" />
     <ClCompile Include="GameBoardGenerator.cpp" />
     <ClCompile Include="GameDefs.cpp" />

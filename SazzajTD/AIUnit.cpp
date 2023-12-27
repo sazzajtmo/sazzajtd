@@ -17,24 +17,26 @@ const std::vector<const char*> g_aiModels =
 
 cAIUnit::cAIUnit()
 {
-	m_transform.position.x = 300.f;
-	m_transform.position.y = 300.f;
+	m_transform.position.x = -300.f;
+	m_transform.position.y = -300.f;
 
 	m_targetPos.position = m_transform.position + tVector2Df( ( static_cast<float>(std::rand() % 200) - 100.f ) / 2.f, ( static_cast<float>(std::rand() % 200) - 100.f ) / 2.f );
 }
 
 cAIUnit::~cAIUnit()
 {
-	if( m_model )
-		cAnimatedTexture::Destroy( m_model );
 }
 
 void cAIUnit::Init()
 {
 	m_model = cAnimatedTexture::Load(g_aiModels[rand() % g_aiModels.size()]);
 	
-	if( m_model )
-		m_model->SetDimensions(1, 2)->SetFramerate(15.f);
+	if (m_model)
+	{
+		m_model->SetDimensions(1, 2);
+		m_model->SetFramerate(15.f);
+		m_model->SetPosition(m_transform.position);
+	}
 
 	std::shared_ptr<cGameBoard> gameBoard = cGameManager::GetInstance()->GetGameBoard();
 
@@ -42,23 +44,13 @@ void cAIUnit::Init()
 	{
 		m_transform.position	= gameBoard->GetEntryPoint();
 		m_pathToTarget			= gameBoard->FindPathAstar( m_transform.position, gameBoard->GetExitPoint() );
-
-		if( m_pathToTarget.size() == 0u )
-			int x = 1;
-
 		m_currPathPointIdx		= m_pathToTarget.size() > 0u ? 0 : -1;
 	}
 }
 
 void cAIUnit::Update(float deltaTime)
 {
-	if (m_model)
-	{
-		m_model->Update( deltaTime );
-		float modelW, modelH;
-		m_model->GetFrameDims( modelW, modelH );
-		m_model->SetPosition( m_transform.position - tVector2Df( modelW * 0.5f, modelH * 0.5f ) );
-	}
+	cGameObject::Update(deltaTime);
 
 #ifdef RANDOM_MOVEMENT
 	if (std::abs(distance(m_transform.position, m_targetPos.position)) < 1.1f)
@@ -108,6 +100,5 @@ void cAIUnit::Draw()
 	//	cGameRenderer::GetInstance()->DrawImmediate( m_pathToTarget[m_pathToTarget.size()-1], 0xffff0000);
 	//}
 
-	if( m_model )
-		m_model->Draw();
+	cGameObject::Draw();
 }

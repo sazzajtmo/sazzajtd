@@ -11,58 +11,49 @@ cAnimatedTexture::cAnimatedTexture()
 
 cAnimatedTexture::~cAnimatedTexture()
 {
-	if( m_texture )
-		SDL_DestroyTexture( m_texture );
 }
 
-cAnimatedTexture* cAnimatedTexture::Load(const std::string& path)
+std::unique_ptr<cAnimatedTexture> cAnimatedTexture::Load(const std::string& path)
 {
 	SDL_Texture* texture = cGameRenderer::GetInstance()->GetSDLTexture( path );
 
 	if( !texture )
 		return nullptr;
 
-	cAnimatedTexture* animTexture = new cAnimatedTexture();
+	std::unique_ptr<cAnimatedTexture> animTexture = std::make_unique<cAnimatedTexture>();
 
-	animTexture->m_texture = texture;	
+	animTexture->m_texture.reset(texture);
 	animTexture->SetDimensions( 1, 1 );
 
-	return animTexture;
+	return std::move(animTexture);
 }
 
-void cAnimatedTexture::Destroy(cAnimatedTexture* animTexture)
-{
-	if( !animTexture )
-		return;
-
-	delete animTexture;
-}
-
-cAnimatedTexture* cAnimatedTexture::SetDimensions(int rows, int cols)
+void cAnimatedTexture::SetDimensions(int rows, int cols)
 {
 	m_rows = rows;
 	m_cols = cols;
 
 	int texWidth, texHeight;
-	SDL_QueryTexture( m_texture, nullptr, nullptr, &texWidth, &texHeight );
+	SDL_QueryTexture( m_texture.get(), nullptr, nullptr, &texWidth, &texHeight);
 
 	m_frameWidth	= static_cast<float>( texWidth / m_cols );
 	m_frameHeight	= static_cast<float>( texHeight / m_rows );
-
-	return this;
 }
 
-cAnimatedTexture* cAnimatedTexture::SetFramerate(float framerate)
+void cAnimatedTexture::SetFramerate(float framerate)
 {
 	m_framerate			= framerate;
 	m_framerateDelta	= 1.f / m_framerate;
-	return this;
 }
 
-cAnimatedTexture* cAnimatedTexture::SetPosition(const tVector2Df& position)
+void cAnimatedTexture::SetPosition(const tVector2Df& position)
 {
 	m_position = position;
-	return this;
+}
+
+void cAnimatedTexture::SetPriority(int priority)
+{
+	m_priority = priority;
 }
 
 void cAnimatedTexture::GetFrameDims(float& frameWidth, float& frameHeight) const
@@ -99,5 +90,11 @@ void cAnimatedTexture::Draw()
 	clipRect.w = m_frameWidth;
 	clipRect.h = m_frameHeight;
 
-	cGameRenderer::GetInstance()->DrawTexture( m_texture, clipRect, posRect );
+	cGameRenderer::GetInstance()->DrawTexture(m_texture.get(), clipRect, posRect, m_priority);
+}
+
+void DestroyTexture(SDL_Texture* sdlTexture)
+{
+	if (sdlTexture)
+		SDL_DestroyTexture(sdlTexture);
 }

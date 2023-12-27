@@ -67,10 +67,9 @@ void cGameManager::Cleanup()
 
 	m_gameObjects.clear();
 
-	if (m_gameBoard.get())
+	if (m_gameBoard)
 	{
 		m_gameBoard->Cleanup();
-		m_gameBoard.reset();
 	}
 }
 
@@ -125,11 +124,17 @@ void cGameManager::Update(float deltaTime)
 
 void cGameManager::Draw()
 {
-	if( m_gameBoard )
+	if (m_gameBoard)
+	{
 		m_gameBoard->Draw();
+		m_gameBoard->DrawDebug();
+	}
 
-	for( auto& gameObject : m_gameObjects )
+	for (auto& gameObject : m_gameObjects)
+	{
 		gameObject->Draw();
+		gameObject->DrawDebug();
+	}
 }
 
 

@@ -2,9 +2,12 @@
 #define GAME_OBJECT_H
 
 #include "GameDefs.h"
+#include <memory>
 
 //base class for Game Objects
 //game objects can be enemy units, ally buildings, static objects, etc.
+
+class cAnimatedTexture;
 
 class cGameObject
 {
@@ -12,16 +15,17 @@ public:
 	cGameObject();
 	virtual ~cGameObject();
 
-	virtual void					Init();
-	virtual	void					Cleanup();
-	virtual void					Update( float deltaTime );
-	virtual void					Draw();
+	virtual void						Init();
+	virtual	void						Cleanup();
+	virtual void						Update( float deltaTime );
+	virtual void						Draw();
+	virtual	void						DrawDebug();
 
-	virtual	void					SetPosition( const tVector2Df& position );
+	virtual	void						SetPosition( const tVector2Df& position );
 
 protected:
-	int								m_health = 0;
-	tGameTransform					m_transform;
+	std::unique_ptr<cAnimatedTexture>	m_model;
+	tGameTransform						m_transform;
 };
 
 #endif

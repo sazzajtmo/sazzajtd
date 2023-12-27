@@ -21,8 +21,6 @@ protected:
 	tGameTransform			m_targetPos;
 	float					m_speed = 100.f;
 
-	cAnimatedTexture*		m_model				= nullptr;
-
 	std::vector<tVector2Df>	m_pathToTarget;
 	int						m_currPathPointIdx	= -1;
 };

@@ -8,6 +8,10 @@
 #include "MemHelper.h"
 #include "GameBoardGenerator.h"
 #include "GameLog.h"
+#include "AnimatedTexture.h"
+#include "GameInputManager.h"
+#include <array>
+#include <ranges>
 
 cGameBoard::cGameBoard()
 {
@@ -19,10 +23,10 @@ cGameBoard::~cGameBoard()
 
 void cGameBoard::Cleanup()
 {
-	for( auto& gridPoint : m_boardGrid )
+	for( auto& gridPoint : m_walkPoints )
 		delete gridPoint;
 
-	m_boardGrid.clear();
+	m_walkPoints.clear();
 
 	cGameObject::Cleanup();
 }
@@ -43,13 +47,54 @@ void cGameBoard::Init()
 	const int boardCols = 27;
 	const int junctions	= 3 + std::rand() % 7;
 
-	auto grid = CreateGameBoard( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
+	m_grid = CreateGameBoard( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
 
-	cGameRenderer::GetInstance()->ExportGridToFile(grid, tileSize, m_boardName);
-	cGameRenderer::GetInstance()->SetBackground(boardNameTextureFileName);
+	cGameRenderer::GetInstance()->ExportGridToFile(m_grid, tileSize, m_boardName);
+	//cGameRenderer::GetInstance()->SetBackground(boardNameTextureFileName);
 	
-	InitPathfinding(grid, tileSize);
+	InitPathfinding(m_grid, tileSize);
 	//InitPathfinding(boardNameWalkableTextureFileName);
+
+	m_model				= cAnimatedTexture::Load(boardNameTextureFileName);
+	
+	if (m_model)
+		m_model->SetPriority(0);
+
+	m_startPointModel	= cAnimatedTexture::Load("buildings/enemy_start.png");
+
+	if (m_startPointModel)
+	{
+		m_startPointModel->SetPosition(m_entryPoint);
+		m_startPointModel->SetDimensions(1, 2);
+		m_startPointModel->SetFramerate(4.f);
+	}
+
+	m_endPointModel		= cAnimatedTexture::Load("buildings/ally_start.png");
+
+	if (m_endPointModel)
+	{
+		m_endPointModel->SetPosition(m_exitPoint);
+		m_endPointModel->SetDimensions(1, 2);
+		m_endPointModel->SetFramerate(4.f);
+	}
+
+	cGameInputManager::GetInstance()->RegisterForMouseEvent([this, tileSize](const cGameInputManager::tMouseEventData& mouseEvent)
+	{
+			//just motion data
+			if (mouseEvent.button != cGameInputManager::eMouseButton::None)
+				return;
+
+			const tVector2Df renderOffset = cGameRenderer::GetInstance()->GetRenderOffset();
+			tVector2Df boardPosition{ mouseEvent.x - renderOffset.x, mouseEvent.y - renderOffset.y };
+
+			m_selectedCell.x = std::lround( ( boardPosition.x - tileSize * 0.5f ) / tileSize );
+			m_selectedCell.y = std::lround( ( boardPosition.y - tileSize * 0.5f ) / tileSize );
+
+			m_selectedCellBuildable = m_selectedCell.x >= 0 && m_selectedCell.x < (int)m_grid[0].size()
+									&& m_selectedCell.y >= 0 && m_selectedCell.y < (int)m_grid.size()
+									&& m_grid[m_selectedCell.y][m_selectedCell.x] == static_cast<int>(eGridCellType::Buildable);
+
+	});
 }
 
 void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath )
@@ -97,14 +142,14 @@ void cGameBoard::InitPathfinding( const std::string& walkableMapTextureFilePath 
 				linkNeighbours( newGridPoint, x				, y - heightStep	);	//N
 				linkNeighbours( newGridPoint, x + widthStep	, y - heightStep	);	//NE
 
-				m_boardGrid.push_back( newGridPoint );	
+				m_walkPoints.push_back( newGridPoint );	
 			}
 		}
 	}
 
 	const float maxCost = 500.f;
 	//edges cost correction
-	for (auto& gridPoint : m_boardGrid)
+	for (auto& gridPoint : m_walkPoints)
 	{
 		float newCost = maxCost * ( ( 8.f - 1.f * gridPoint->neighbours.size() ) / 8.f );
 		gridPoint->cost = newCost;
@@ -118,7 +163,7 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 
 	auto linkNeighbours = [this]( tPoint* gridPoint, int x, int y, const std::vector<std::vector<int>>& neighboursIndices, const std::vector<std::vector<int8_t>>& grid )
 	{
-		if (y < 0 || x >= neighboursIndices[0].size() || grid[y][x] == 0u)
+		if (y < 0 || x >= neighboursIndices[0].size() || grid[y][x] != static_cast<int8_t>(eGridCellType::Walkable))
 			return;
 
 		int boardCellIdx = neighboursIndices[y][x];
@@ -126,7 +171,7 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 		if (boardCellIdx == -1)
 			return;
 
-		tPoint* neighbor = m_boardGrid[boardCellIdx];
+		tPoint* neighbor = m_walkPoints[boardCellIdx];
 
 		if (neighbor)
 		{
@@ -144,9 +189,9 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 	{
 		for( int x = 0; x < cols; x++ )
 		{
-			if (grid[y][x] == 0u 
-				&& ( y == 0 || grid[y-1][x] == 0u )
-				&& ( x == 0 || grid[y][x-1] == 0u ))
+			if (grid[y][x] != static_cast<int8_t>(eGridCellType::Walkable)
+				&& ( y == 0 || grid[y-1][x] != static_cast<int8_t>(eGridCellType::Walkable))
+				&& ( x == 0 || grid[y][x-1] != static_cast<int8_t>(eGridCellType::Walkable)))
 				continue;
 
 			tPoint* newGridPoint = snew tPoint();
@@ -158,17 +203,17 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 			linkNeighbours(newGridPoint, x - 1	, y - 1	, neighbours, grid);	//NW
 			linkNeighbours(newGridPoint, x		, y - 1	, neighbours, grid);	//N
 
-			if( y > 0 && grid[y-1][x] != 0u )
+			if( y > 0 && grid[y-1][x] == static_cast<int8_t>(eGridCellType::Walkable))
 				linkNeighbours(newGridPoint, x + 1	, y - 1	, neighbours, grid);	//NE
 
-			m_boardGrid.push_back(newGridPoint);
-			neighbours[y][x] = static_cast<int>(m_boardGrid.size() - 1);
+			m_walkPoints.push_back(newGridPoint);
+			neighbours[y][x] = static_cast<int>(m_walkPoints.size() - 1);
 		}
 	}
 
 	const float maxCost = 500.f;
 	//edges cost correction
-	for (auto& gridPoint : m_boardGrid)
+	for (auto& gridPoint : m_walkPoints)
 	{
 		float newCost = maxCost * ((8.f - 1.f * gridPoint->neighbours.size()) / 8.f);
 		gridPoint->cost = newCost;
@@ -177,7 +222,7 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 
 cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance) const
 {
-	const int64_t n = static_cast<int64_t>(m_boardGrid.size());
+	const int64_t n = static_cast<int64_t>(m_walkPoints.size());
 
 	if( n == 0u )
 		return nullptr;
@@ -191,13 +236,13 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 	{
 		m = l + ( r - l ) / 2;
 
-		if (std::abs( y - m_boardGrid[m]->pos.y ) < tolerance)
+		if (std::abs( y - m_walkPoints[m]->pos.y ) < tolerance)
 		{
-			y = m_boardGrid[m]->pos.y;
+			y = m_walkPoints[m]->pos.y;
 			found = true;
 			break;
 		}
-		else if (y > m_boardGrid[m]->pos.y)
+		else if (y > m_walkPoints[m]->pos.y)
 		{
 			l = m + 1;
 		}
@@ -213,8 +258,8 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 	l = m;
 	r = m;
 
-	while( l > 0 && std::abs( y - m_boardGrid[l-1]->pos.y ) <= FLT_EPSILON ) l--;
-	while( r < n-1 && std::abs( y - m_boardGrid[r+1]->pos.y ) <= FLT_EPSILON ) r++;
+	while( l > 0 && std::abs( y - m_walkPoints[l-1]->pos.y ) <= FLT_EPSILON ) l--;
+	while( r < n-1 && std::abs( y - m_walkPoints[r+1]->pos.y ) <= FLT_EPSILON ) r++;
 
 	found	= false;
 
@@ -222,12 +267,12 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 	{
 		m = l + ( r - l ) / 2;
 
-		if (std::abs(m_boardGrid[m]->pos.x - x) < tolerance)
+		if (std::abs(m_walkPoints[m]->pos.x - x) < tolerance)
 		{
 			found = true;
 			break;
 		}
-		else if (x > m_boardGrid[m]->pos.x)
+		else if (x > m_walkPoints[m]->pos.x)
 		{
 			l = m + 1;
 		}
@@ -237,7 +282,7 @@ cGameBoard::tPoint* cGameBoard::FindGridPoint(float x, float y, float tolerance)
 		}
 	}
 
-	return found ? m_boardGrid[m] : nullptr;
+	return found ? m_walkPoints[m] : nullptr;
 }
 
 std::vector<tVector2Df> cGameBoard::FindPathBFS(const tVector2Df& startPos, const tVector2Df& endPos) const
@@ -366,20 +411,57 @@ std::vector<tVector2Df> cGameBoard::FindPathAstar(const tVector2Df& startPos, co
 
 void cGameBoard::Update(float deltaTime)
 {
+	if (m_startPointModel)
+		m_startPointModel->Update(deltaTime);
+
+	if (m_endPointModel)
+		m_endPointModel->Update(deltaTime);
 }
 
 void cGameBoard::Draw()
 {
+	cGameObject::Draw();
+
+	if (m_startPointModel)
+		m_startPointModel->Draw();
+
+	if (m_endPointModel)
+		m_endPointModel->Draw();
+
+	if (m_selectedCell.x >= 0 && m_selectedCell.y >= 0)
+	{
+		const float tileSize = 24.f;
+
+		std::array<tVector2Df, 5> selectedCellVertices =
+		{
+			tVector2Df{ m_selectedCell.x * tileSize			, m_selectedCell.y * tileSize },
+			tVector2Df{ (m_selectedCell.x + 1) * tileSize	, m_selectedCell.y * tileSize },
+			tVector2Df{ (m_selectedCell.x + 1) * tileSize	, (m_selectedCell.y + 1) * tileSize },
+			tVector2Df{ m_selectedCell.x * tileSize			, (m_selectedCell.y + 1) * tileSize },
+			tVector2Df{ m_selectedCell.x * tileSize			, m_selectedCell.y * tileSize }
+		};
+
+		for (size_t i = 1u; i < selectedCellVertices.size(); i++)
+		{
+			cGameRenderer::GetInstance()->DrawLine(selectedCellVertices[i-1], selectedCellVertices[i], m_selectedCellBuildable ? 0xff00ff00 : 0xffff0000);
+		}
+	}
+}
+
+void cGameBoard::DrawDebug()
+{
+	cGameObject::DrawDebug();
+
 #define DEBUG_PATHFINDING
 #ifdef DEBUG_PATHFINDING
-	for (const auto* gridPoint : m_boardGrid)
+	for (const auto* gridPoint : m_walkPoints)
 	{
 		for (const auto* neighbour : gridPoint->neighbours)
 		{
-			cGameRenderer::GetInstance()->DrawLine( gridPoint->pos, neighbour->pos, 0x3fffffff );
+			cGameRenderer::GetInstance()->DrawLine(gridPoint->pos, neighbour->pos, 0x3fffffff);
 		}
 
-		cGameRenderer::GetInstance()->DrawImmediate( gridPoint->pos, 0x3fffffff );
+		cGameRenderer::GetInstance()->DrawImmediate(gridPoint->pos, 0x3fffffff);
 	}
 #endif
 }
@@ -389,7 +471,7 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 	std::vector<std::vector<int8_t>> grid(rows, std::vector<int8_t>(cols));
 
 	for (auto& gridLine : grid)
-		memset(gridLine.data(), 0, gridLine.size());
+		memset(gridLine.data(), static_cast<int8_t>(eGridCellType::Empty), gridLine.size());
 
 	std::pair<int, int> entryPoint = { std::rand() % rows, 0 };
 
@@ -412,25 +494,28 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 	exitPoint.second = cols - 1;
 	junctions.push_back(exitPoint);
 
-	grid[entryPoint.first][entryPoint.second] = 1;
-	grid[exitPoint.first][exitPoint.second] = 1;
+	grid[entryPoint.first][entryPoint.second]	= static_cast<int8_t>(eGridCellType::Walkable);
+	grid[exitPoint.first][exitPoint.second]		= static_cast<int8_t>(eGridCellType::Walkable);
 
 	auto linkJunctions = [&grid](const std::pair<int, int>& linkFrom, const std::pair<int, int>& linkTo)
 		{
-			int yJunc = linkFrom.first;
+			const auto [linkToY, linkToX]		= linkTo;
+			const auto [linkFromY, linkFromX]	= linkFrom;
 
-			while (yJunc != linkTo.first)
+			int yJunc = linkFromY;
+
+			while (yJunc != linkToY)
 			{
-				grid[yJunc][linkFrom.second] = 1;
-				yJunc += yJunc > linkTo.first ? -1 : 1;
+				grid[yJunc][linkFromX]	= static_cast<int8_t>(eGridCellType::Walkable);
+				yJunc += yJunc > linkToY ? -1 : 1;
 			}
 
-			int xJunc = linkFrom.second;
+			int xJunc = linkFromX;
 
-			while (xJunc != linkTo.second)
+			while (xJunc != linkToX)
 			{
-				grid[linkTo.first][xJunc] = 1;
-				xJunc += xJunc > linkTo.second ? -1 : 1;
+				grid[linkToY][xJunc]	= static_cast<int8_t>(eGridCellType::Walkable);
+				xJunc += xJunc > linkToX ? -1 : 1;
 			}
 		};
 
@@ -442,13 +527,27 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 	for (int i = 1; i < (int)junctions.size() - 2; i++)
 		linkJunctions(junctions[i], junctions[i + 1]);
 
-	//debugging
-	for (int i = 1; i < (int)junctions.size(); i++)
+	//generate buildable
+	for (int y = 1; y < rows-1; y++)
 	{
-		const auto& junction = junctions[i];
-
-		grid[junction.first][junction.second] = 2;
+		for (int x = 1; x < cols-1; x++)
+		{
+			if (grid[y][x] == static_cast<int8_t>(eGridCellType::Empty)
+				&& (grid[y - 1][x] == static_cast<int8_t>(eGridCellType::Walkable)
+					|| grid[y + 1][x] == static_cast<int8_t>(eGridCellType::Walkable)
+					|| grid[y][x - 1] == static_cast<int8_t>(eGridCellType::Walkable)
+					|| grid[y][x + 1] == static_cast<int8_t>(eGridCellType::Walkable)))
+				grid[y][x] = static_cast<int8_t>(eGridCellType::Buildable);
+		}
 	}
+	
+	//debugging
+	//for (int i = 1; i < (int)junctions.size(); i++)
+	//{
+	//	const auto& junction = junctions[i];
+
+	//	grid[junction.first][junction.second] = 2;
+	//}
 
 	float smallError = 0.f;// tileSize * 0.2f;
 
