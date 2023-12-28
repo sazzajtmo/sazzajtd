@@ -10,10 +10,13 @@
 #include "GameLog.h"
 #include "AnimatedTexture.h"
 #include "GameInputManager.h"
+#include "GameManager.h"
+#include "BuildingUnit.h"
 #include <array>
 #include <ranges>
 
 cGameBoard::cGameBoard()
+: cGameObject(eGameObjectTypes::Board)
 {
 }
 
@@ -81,8 +84,8 @@ void cGameBoard::Init()
 	cGameInputManager::GetInstance()->RegisterForMouseEvent([this, tileSize](const cGameInputManager::tMouseEventData& mouseEvent)
 	{
 			//just motion data
-			if (mouseEvent.button != cGameInputManager::eMouseButton::None)
-				return;
+			//if (mouseEvent.button != cGameInputManager::eMouseButton::None)
+			//	return;
 
 			const tVector2Df renderOffset = cGameRenderer::GetInstance()->GetRenderOffset();
 			tVector2Df boardPosition{ mouseEvent.x - renderOffset.x, mouseEvent.y - renderOffset.y };
@@ -94,6 +97,12 @@ void cGameBoard::Init()
 									&& m_selectedCell.y >= 0 && m_selectedCell.y < (int)m_grid.size()
 									&& m_grid[m_selectedCell.y][m_selectedCell.x] == static_cast<int>(eGridCellType::Buildable);
 
+			if (m_selectedCellBuildable && mouseEvent.button == cGameInputManager::eMouseButton::Left)
+			{
+				tGameTransform transform;
+				transform.position = tVector2Df{ static_cast<float>(m_selectedCell.x * tileSize + tileSize * 0.5f), static_cast<float>(m_selectedCell.y * tileSize + tileSize * 0.5f) };
+				cGameManager::GetInstance()->SpawnObject( eGameObjectTypes::Building, transform );
+			}
 	});
 }
 
@@ -452,7 +461,7 @@ void cGameBoard::DrawDebug()
 {
 	cGameObject::DrawDebug();
 
-#define DEBUG_PATHFINDING
+//#define DEBUG_PATHFINDING
 #ifdef DEBUG_PATHFINDING
 	for (const auto* gridPoint : m_walkPoints)
 	{

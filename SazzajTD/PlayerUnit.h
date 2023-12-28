@@ -2,7 +2,7 @@
 #define PLAYER_UNIT_H
 
 #include "GameObject.h"
-#include "GameDefs.h"
+#include "Utilities.h"
 #include <vector>
 
 class cAnimatedTexture;

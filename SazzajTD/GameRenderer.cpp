@@ -381,7 +381,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 			posRect.y = y * tileSize;
 			posRect.w = tileSize;
 			posRect.h = tileSize;
-			SDL_Texture* tileTexture = std::rand() % 100 > 80 ? grassTextures[rand()%numGrassTextures] : simpleGrass;
+			SDL_Texture* tileTexture = grid[y][x] == 0 && std::rand() % 100 > 80 ? grassTextures[rand()%numGrassTextures] : simpleGrass;
 			SDL_RenderCopy( m_renderer.get(), tileTexture, nullptr, &posRect );
 		}
 	}
@@ -402,7 +402,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 		const int y = std::rand() % numRows;
 		auto pair = std::make_pair( x, y );
 
-		if( decorationPlacements.count( pair ) > 0)
+		if( decorationPlacements.count( pair ) > 0 || grid[y][x] != 0)
 			continue;
 
 		decorationPlacements.insert( pair );

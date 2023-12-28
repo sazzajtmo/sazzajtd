@@ -2,7 +2,7 @@
 #define GAME_BOARD_GENERATOR_H
 
 #include "GameObject.h"
-#include "GameDefs.h"
+#include "Utilities.h"
 #include <vector>
 
 namespace GameBoardGenerator

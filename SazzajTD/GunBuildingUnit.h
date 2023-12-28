@@ -1,5 +1,5 @@
-#ifndef BUILDING_UNIT_H
-#define BUILDING_UNIT_H
+#ifndef GUN_BUILDING_UNIT_H
+#define GUN_BUILDING_UNIT_H
 
 #include "GameObject.h"
 #include "Utilities.h"
@@ -7,11 +7,11 @@
 
 class cAnimatedTexture;
 
-class cBuildingUnit : public cGameObject
+class cGunBuildingUnit : public cGameObject
 {
 public:
-	cBuildingUnit();
-	~cBuildingUnit();
+	cGunBuildingUnit();
+	~cGunBuildingUnit();
 
 	void					Init() override;
 	void					Update( float deltaTime ) override;

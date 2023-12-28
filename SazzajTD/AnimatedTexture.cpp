@@ -56,10 +56,15 @@ void cAnimatedTexture::SetPriority(int priority)
 	m_priority = priority;
 }
 
+void cAnimatedTexture::SetScale(float scale)
+{
+	m_scale = scale;
+}
+
 void cAnimatedTexture::GetFrameDims(float& frameWidth, float& frameHeight) const
 {
-	frameWidth	= m_frameWidth;
-	frameHeight	= m_frameHeight;
+	frameWidth	= m_frameWidth	* m_scale;
+	frameHeight	= m_frameHeight	* m_scale;
 }
 
 void cAnimatedTexture::Update(float deltaTime)
@@ -81,12 +86,12 @@ void cAnimatedTexture::Draw()
 	tRectf posRect;
 	posRect.x = m_position.x;
 	posRect.y = m_position.y;
-	posRect.w = m_frameWidth;
-	posRect.h = m_frameHeight;
+	posRect.w = m_frameWidth	* m_scale;
+	posRect.h = m_frameHeight	* m_scale;
 
 	tRectf clipRect;
-	clipRect.x = m_frameWidth * col;
-	clipRect.y = m_frameHeight * row;
+	clipRect.x = m_frameWidth	* col;
+	clipRect.y = m_frameHeight	* row;
 	clipRect.w = m_frameWidth;
 	clipRect.h = m_frameHeight;
 

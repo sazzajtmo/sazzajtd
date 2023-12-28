@@ -68,6 +68,12 @@
     <ClInclude Include="BuildingUnit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Utilities.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GunBuildingUnit.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SazzajTD.cpp">
@@ -113,6 +119,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BuildingUnit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GunBuildingUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

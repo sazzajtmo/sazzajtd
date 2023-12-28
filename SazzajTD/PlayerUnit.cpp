@@ -7,6 +7,7 @@
 #include "AnimatedTexture.h"
 
 cPlayerUnit::cPlayerUnit()
+: cGameObject(eGameObjectTypes::Player)
 {
 }
 

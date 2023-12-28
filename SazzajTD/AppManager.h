@@ -3,7 +3,7 @@
 
 #include <string>
 #include <vector>
-#include "GameDefs.h"
+#include "Utilities.h"
 
 struct SDL_Window;
 struct SDL_Renderer;

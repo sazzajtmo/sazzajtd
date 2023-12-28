@@ -153,11 +153,13 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameRenderer.h" />
     <ClInclude Include="GameUI.h" />
+    <ClInclude Include="GunBuildingUnit.h" />
     <ClInclude Include="MemHelper.h" />
     <ClInclude Include="PlayerUnit.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SazzajTD.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="Utilities.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AIUnit.cpp" />
@@ -173,8 +175,10 @@
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameRenderer.cpp" />
     <ClCompile Include="GameUI.cpp" />
+    <ClCompile Include="GunBuildingUnit.cpp" />
     <ClCompile Include="PlayerUnit.cpp" />
     <ClCompile Include="SazzajTD.cpp" />
+    <ClCompile Include="Utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="SazzajTD.rc" />

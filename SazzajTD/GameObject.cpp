@@ -8,6 +8,11 @@ cGameObject::cGameObject()
 {
 }
 
+cGameObject::cGameObject(eGameObjectTypes type)
+: m_type( type )
+{
+}
+
 cGameObject::~cGameObject()
 {
 }
@@ -44,4 +49,14 @@ void cGameObject::DrawDebug()
 void cGameObject::SetPosition(const tVector2Df& position)
 {
 	m_transform.position = position;
+}
+
+tVector2Df cGameObject::GetPosition() const
+{
+	return m_transform.position;
+}
+
+eGameObjectTypes cGameObject::GetType() const
+{
+	return m_type;
 }

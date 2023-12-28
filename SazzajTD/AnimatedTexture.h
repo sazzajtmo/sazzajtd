@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <string>
-#include "GameDefs.h"
+#include "Utilities.h"
 
 struct SDL_Texture;
 void DestroyTexture(SDL_Texture*);
@@ -22,6 +22,7 @@ public:
 			void								SetFramerate( float framerate );
 			void								SetPosition( const tVector2Df& position );
 			void								SetPriority(int priority);
+			void								SetScale(float scale);
 
 			void								GetFrameDims( float& frameWidth, float& frameHeight ) const;
 
@@ -30,6 +31,7 @@ public:
 
 protected:
 			tVector2Df							m_position;
+			float								m_scale				= 1.f;
 			int									m_rows				= 1;
 			int									m_cols				= 1;
 			float								m_framerate			= 1.f;

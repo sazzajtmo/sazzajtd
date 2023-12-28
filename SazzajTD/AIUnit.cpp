@@ -1,11 +1,13 @@
 #include "AIUnit.h"
-#include <math.h>
+#include <cmath>
+#include <algorithm>
 
 #include "GameRenderer.h"
 #include "AnimatedTexture.h"
 #include "GameManager.h"
 #include "GameBoard.h"
 #include "GameLog.h"
+#include "GameDefs.h"
 
 const std::vector<const char*> g_aiModels = 
 {
@@ -16,9 +18,11 @@ const std::vector<const char*> g_aiModels =
 };
 
 cAIUnit::cAIUnit()
+: cGameObject(eGameObjectTypes::Enemy)
 {
 	m_transform.position.x = -300.f;
 	m_transform.position.y = -300.f;
+	
 
 	m_targetPos.position = m_transform.position + tVector2Df( ( static_cast<float>(std::rand() % 200) - 100.f ) / 2.f, ( static_cast<float>(std::rand() % 200) - 100.f ) / 2.f );
 }
@@ -36,6 +40,7 @@ void cAIUnit::Init()
 		m_model->SetDimensions(1, 2);
 		m_model->SetFramerate(15.f);
 		m_model->SetPosition(m_transform.position);
+		//m_model->SetScale(0.9f);
 	}
 
 	std::shared_ptr<cGameBoard> gameBoard = cGameManager::GetInstance()->GetGameBoard();
@@ -51,6 +56,12 @@ void cAIUnit::Init()
 void cAIUnit::Update(float deltaTime)
 {
 	cGameObject::Update(deltaTime);
+
+	if (m_health <= 0.f)
+	{
+		cGameManager::GetInstance()->DespawnObject(shared_from_this());
+		return;
+	}
 
 #ifdef RANDOM_MOVEMENT
 	if (std::abs(distance(m_transform.position, m_targetPos.position)) < 1.1f)
@@ -75,13 +86,15 @@ void cAIUnit::Update(float deltaTime)
 		else
 		{
 			tVector2Df dirToDest = directionNormalized( m_transform.position, targetPosition );
-			m_transform.position += dirToDest * m_speed * deltaTime;
+			m_transform.position += dirToDest * m_speed * m_speedFactor * deltaTime;
 		}
 	}
 	else
 	{
-		cGameManager::GetInstance()->DespawnObject( this );
+		cGameManager::GetInstance()->DespawnObject( shared_from_this() );
 	}
+
+	m_speedFactor = 1.f; //reset speed factor every frame. other external factor may change it, but need to change it on frame.
 }
 
 void cAIUnit::Draw()
@@ -101,4 +114,10 @@ void cAIUnit::Draw()
 	//}
 
 	cGameObject::Draw();
+}
+
+void cAIUnit::ReceiveDamage(float dmgValue)
+{
+	m_health = std::clamp( dmgValue, 0.f, GameConfig::values.enemy_hp);
+	
 }

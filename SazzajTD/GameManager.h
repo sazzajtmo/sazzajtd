@@ -4,9 +4,13 @@
 #include <vector>
 #include <memory>
 #include "MemHelper.h"
+#include "Utilities.h"
+#include "GameDefs.h"
 
 class cGameObject;
 class cGameBoard;
+
+
 
 class cGameManager final
 {
@@ -15,33 +19,42 @@ private:
 	~cGameManager();
 
 public:
-	static	cGameManager*				GetInstance();
+	static	cGameManager*					GetInstance();
 	static	void							DestroyInstance();
 
 			bool							Init();
 			void							Cleanup();
 
-			template<class T>
-			void							SpawnObject()
-			{
-				cGameObject* gameObject = snew T;
-
-				gameObject->Init();
-
-				m_gameObjects.push_back( gameObject );
-			}
-			void							DespawnObject( cGameObject* gameObject );
+			void							SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform);
+			void							DespawnObject( std::shared_ptr<cGameObject> gameObject );
 
 			void							Update( float deltaTime );
 			void							Draw();
 
 	inline	std::shared_ptr<cGameBoard>		GetGameBoard()	{ return m_gameBoard; }
+			
+			//utilities
+			void							GetGameObjectsInRadius(eGameObjectTypes objectType, std::vector<std::shared_ptr<cGameObject>>& objects, const tVector2Df& origin, float radius) const;
+private:
+			template<class T>
+			std::shared_ptr<cGameObject>	SpawnObject()
+			{
+				std::shared_ptr<cGameObject> gameObject = std::make_shared<T>();
+
+				gameObject->Init();
+
+				m_gameObjects.push_back(std::move(gameObject));
+
+				return m_gameObjects.back();
+			}
 
 private:
 	static	cGameManager*					s_instance;
 
-			std::vector<cGameObject*>		m_gameObjects;
-			std::vector<cGameObject*>		m_despawnList;
+			std::vector<std::shared_ptr<cGameObject>>	
+											m_gameObjects;
+			std::vector<std::shared_ptr<cGameObject>>
+											m_despawnList;
 
 			std::shared_ptr<cGameBoard>		m_gameBoard;
 

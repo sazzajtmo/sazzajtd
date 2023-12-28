@@ -1,7 +1,10 @@
 #include "GameManager.h"
+#include "Utilities.h"
 #include "GameObject.h"
 #include "AIUnit.h"
 #include "PlayerUnit.h"
+#include "BuildingUnit.h"
+#include "GunBuildingUnit.h"
 #include "GameBoard.h"
 #include "GameBoardGenerator.h"
 #include "GameRenderer.h"
@@ -62,10 +65,11 @@ void cGameManager::Cleanup()
 {
 	for (auto& gameObject : m_gameObjects)
 	{
-		delete gameObject;
+		gameObject->Cleanup();
 	}
 
 	m_gameObjects.clear();
+	m_despawnList.clear();
 
 	if (m_gameBoard)
 	{
@@ -73,10 +77,38 @@ void cGameManager::Cleanup()
 	}
 }
 
-void cGameManager::DespawnObject(cGameObject* gameObject)
+void cGameManager::SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform)
+{
+	std::shared_ptr<cGameObject> newObject;
+
+	switch (objectType)
+	{
+		case eGameObjectTypes::Enemy:
+			newObject = SpawnObject<cAIUnit>();
+			break;
+
+		case eGameObjectTypes::Building:
+			newObject = SpawnObject<cBuildingUnit>();
+			break;
+
+		case eGameObjectTypes::GunBuilding:
+			newObject = SpawnObject<cGunBuildingUnit>();
+			break;
+
+		default:
+		case eGameObjectTypes::Player:
+		case eGameObjectTypes::None:
+			break;
+	}
+
+	if (newObject)
+		newObject->SetPosition(transform.position);
+}
+
+void cGameManager::DespawnObject(std::shared_ptr<cGameObject> gameObject)
 {
 	//should use index rather than pointers
-	m_despawnList.push_back( gameObject );
+	m_despawnList.push_back( std::move(gameObject) );
 }
 
 void cGameManager::Update(float deltaTime)
@@ -98,8 +130,6 @@ void cGameManager::Update(float deltaTime)
 		if (gameObjIt != m_gameObjects.end())
 		{
 			m_gameObjects.erase(gameObjIt);
-			gameObject->Cleanup();
-			delete gameObject;
 		}
 	}
 
@@ -110,7 +140,6 @@ void cGameManager::Update(float deltaTime)
 
 	for( auto& gameObject : m_gameObjects )
 		gameObject->Update( deltaTime );
-
 
 	m_spawnTimer -= deltaTime;
 
@@ -134,6 +163,15 @@ void cGameManager::Draw()
 	{
 		gameObject->Draw();
 		gameObject->DrawDebug();
+	}
+}
+
+void cGameManager::GetGameObjectsInRadius(eGameObjectTypes objectType, std::vector<std::shared_ptr<cGameObject>>& objects, const tVector2Df& origin, float radius) const
+{
+	for (const auto& object : m_gameObjects)
+	{
+		if (object->GetType() == objectType && distance(origin, object->GetPosition()) <= radius)
+			objects.push_back(object);
 	}
 }
 

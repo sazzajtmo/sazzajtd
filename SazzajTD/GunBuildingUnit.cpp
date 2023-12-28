@@ -1,4 +1,4 @@
-#include "BuildingUnit.h"
+#include "GunBuildingUnit.h"
 
 #include "GameRenderer.h"
 #include "AnimatedTexture.h"
@@ -7,25 +7,21 @@
 #include "GameLog.h"
 #include "AIUnit.h"
 
-const float BUILDING_RADIUS = 60.f;
-
-cBuildingUnit::cBuildingUnit()
-: cGameObject( eGameObjectTypes::Building )
-{
-	m_transform.position.x = -300.f;
-	m_transform.position.y = -300.f;
-}
-
-cBuildingUnit::~cBuildingUnit()
+cGunBuildingUnit::cGunBuildingUnit()
+: cGameObject( eGameObjectTypes::GunBuilding )
 {
 }
 
-void cBuildingUnit::Init()
+cGunBuildingUnit::~cGunBuildingUnit()
 {
-	m_model = cAnimatedTexture::Load("buildings/building_slow.png");
 }
 
-void cBuildingUnit::Update(float deltaTime)
+void cGunBuildingUnit::Init()
+{
+	m_model = cAnimatedTexture::Load("buildings/building_gun.png");
+}
+
+void cGunBuildingUnit::Update(float deltaTime)
 {
 	cGameObject::Update(deltaTime);
 
@@ -35,12 +31,12 @@ void cBuildingUnit::Update(float deltaTime)
 
 	for (const auto& object : proximityObjects)
 	{
-		dynamic_cast<cAIUnit*>(object.get())->SetSpeedFactor(GameConfig::values.building_slow_factor);
+		//dynamic_cast<cAIUnit*>(object.get())->SetSpeedFactor(GameConfig::values.building_slow_factor);
 		cGameRenderer::GetInstance()->DrawLine(object->GetPosition(), m_transform.position, 0xffff0000);
 	}
 }
 
-void cBuildingUnit::Draw()
+void cGunBuildingUnit::Draw()
 {
 	cGameObject::Draw();
 }

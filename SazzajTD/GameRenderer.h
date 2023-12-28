@@ -6,7 +6,7 @@
 #include <set>
 #include <string>
 #include <memory>
-#include "GameDefs.h"
+#include "Utilities.h"
 
 struct SDL_Renderer;
 struct SDL_Window;
