@@ -18,6 +18,7 @@ public:
 	void					Draw() override;
 
 protected:
+	float					m_fireTimer = 0.f;
 };
 
 #endif

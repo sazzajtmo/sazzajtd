@@ -114,10 +114,25 @@ void cAIUnit::Draw()
 	//}
 
 	cGameObject::Draw();
+
+	float modelW = 0.f, modelH = 0.f;
+
+	if (m_model)
+		m_model->GetFrameDims(modelW, modelH);
+
+	const float			normHealth	= m_health / GameConfig::values.enemy_hp;
+	const tVector2Df	hpStart		= m_transform.position - X_AXIS * modelW * 0.5f + Y_AXIS * ( modelH * 0.5f + 4.f );
+	const tVector2Df	hpEnd		= m_transform.position + X_AXIS * modelW * 0.5f + Y_AXIS * ( modelH * 0.5f + 4.f );
+	const tVector2Df	hpMid		= hpStart * ( 1.f - normHealth ) + hpEnd * normHealth;
+
+	cGameRenderer::GetInstance()->DrawLine(hpStart, hpMid, 0xff00ff00);
+
+	if ((1.f - normHealth) > FLT_EPSILON)
+		cGameRenderer::GetInstance()->DrawLine(hpMid, hpEnd, 0xffff0000);
 }
 
 void cAIUnit::ReceiveDamage(float dmgValue)
 {
-	m_health = std::clamp( dmgValue, 0.f, GameConfig::values.enemy_hp);
+	m_health = std::clamp(m_health - dmgValue, 0.f, GameConfig::values.enemy_hp);
 	
 }

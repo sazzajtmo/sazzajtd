@@ -9,6 +9,7 @@
 #include "GameBoardGenerator.h"
 #include "GameRenderer.h"
 #include "MemHelper.h"
+#include <algorithm>
 
 cGameManager* cGameManager::s_instance( nullptr );
 
@@ -145,7 +146,7 @@ void cGameManager::Update(float deltaTime)
 
 	if (m_spawnTimer <= 0.f)
 	{
-		m_spawnTimer = 1.f;
+		m_spawnTimer = 1.f / GameConfig::values.enemy_spawn_rate;
 
 		SpawnObject<cAIUnit>();
 	}
@@ -173,6 +174,30 @@ void cGameManager::GetGameObjectsInRadius(eGameObjectTypes objectType, std::vect
 		if (object->GetType() == objectType && distance(origin, object->GetPosition()) <= radius)
 			objects.push_back(object);
 	}
+}
+
+std::shared_ptr<cGameObject> cGameManager::GetClosestGameObject(eGameObjectTypes objectType, const tVector2Df& origin, float maxRadius) const
+{
+	float	minDistance = -1.f;
+	int		minIndex	= -1;
+
+	for (size_t i = 0u; i < m_gameObjects.size(); i++)
+	{
+		const auto& gameObject = m_gameObjects[i];
+
+		if (gameObject->GetType() != objectType)
+			continue;
+
+		float distToOrigin = distance(origin, gameObject->GetPosition());
+
+		if (distToOrigin <= maxRadius && distToOrigin > minDistance)
+		{
+			minDistance	= distToOrigin;
+			minIndex	= i;
+		}
+	}
+
+	return minIndex != -1 ? m_gameObjects[minIndex] : nullptr;
 }
 
 

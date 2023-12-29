@@ -35,6 +35,9 @@ public:
 			
 			//utilities
 			void							GetGameObjectsInRadius(eGameObjectTypes objectType, std::vector<std::shared_ptr<cGameObject>>& objects, const tVector2Df& origin, float radius) const;
+			[[nodiscard]]
+			std::shared_ptr<cGameObject>	GetClosestGameObject(eGameObjectTypes objectType, const tVector2Df& origin, float maxRadius) const;
+
 private:
 			template<class T>
 			std::shared_ptr<cGameObject>	SpawnObject()

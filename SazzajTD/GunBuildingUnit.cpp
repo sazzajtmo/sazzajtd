@@ -25,14 +25,25 @@ void cGunBuildingUnit::Update(float deltaTime)
 {
 	cGameObject::Update(deltaTime);
 
-	std::vector<std::shared_ptr<cGameObject>> proximityObjects;
+	m_fireTimer -= deltaTime;
 
-	cGameManager::GetInstance()->GetGameObjectsInRadius(eGameObjectTypes::Enemy, proximityObjects, m_transform.position, GameConfig::values.building_slow_radius);
-
-	for (const auto& object : proximityObjects)
+	if (m_fireTimer <= 0.f)
 	{
-		//dynamic_cast<cAIUnit*>(object.get())->SetSpeedFactor(GameConfig::values.building_slow_factor);
-		cGameRenderer::GetInstance()->DrawLine(object->GetPosition(), m_transform.position, 0xffff0000);
+		std::vector<std::shared_ptr<cGameObject>> proximityObjects;
+
+		std::shared_ptr<cGameObject> closestEnemy = cGameManager::GetInstance()->GetClosestGameObject(eGameObjectTypes::Enemy, m_transform.position, GameConfig::values.building_gun_radius);
+
+		if (closestEnemy)
+		{
+			dynamic_cast<cAIUnit*>(closestEnemy.get())->ReceiveDamage(GameConfig::values.building_gun_damage);
+			m_fireTimer = 1.f / GameConfig::values.building_gun_firerate;
+
+			cGameRenderer::GetInstance()->DrawLine(m_transform.position, closestEnemy->GetPosition(), 0xffff0000);
+		}
+		else
+		{
+			m_fireTimer = 0.016f * 3.f;
+		}
 	}
 }
 

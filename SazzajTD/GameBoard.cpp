@@ -101,7 +101,7 @@ void cGameBoard::Init()
 			{
 				tGameTransform transform;
 				transform.position = tVector2Df{ static_cast<float>(m_selectedCell.x * tileSize + tileSize * 0.5f), static_cast<float>(m_selectedCell.y * tileSize + tileSize * 0.5f) };
-				cGameManager::GetInstance()->SpawnObject( eGameObjectTypes::Building, transform );
+				cGameManager::GetInstance()->SpawnObject( eGameObjectTypes::GunBuilding, transform );
 			}
 	});
 }

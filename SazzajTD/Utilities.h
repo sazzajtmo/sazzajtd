@@ -48,6 +48,9 @@ struct tVector2D
 
 using tVector2Df = tVector2D<float>;
 
+static const tVector2Df X_AXIS{ 1.f, 0.f };
+static const tVector2Df Y_AXIS{ 0.f, -1.f };	//+1 is up, -1 is down
+
 struct tGameTransform
 {
 	tVector2Df			position;
