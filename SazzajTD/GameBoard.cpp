@@ -6,7 +6,6 @@
 #include <ctime>
 #include "GameRenderer.h"
 #include "MemHelper.h"
-#include "GameBoardGenerator.h"
 #include "GameLog.h"
 #include "AnimatedTexture.h"
 #include "GameInputManager.h"

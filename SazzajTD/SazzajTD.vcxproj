@@ -145,7 +145,6 @@
     <ClInclude Include="BuildingUnit.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GameBoard.h" />
-    <ClInclude Include="GameBoardGenerator.h" />
     <ClInclude Include="GameDefs.h" />
     <ClInclude Include="GameInputManager.h" />
     <ClInclude Include="GameLog.h" />
@@ -168,7 +167,6 @@
     <ClCompile Include="AppManager.cpp" />
     <ClCompile Include="BuildingUnit.cpp" />
     <ClCompile Include="GameBoard.cpp" />
-    <ClCompile Include="GameBoardGenerator.cpp" />
     <ClCompile Include="GameDefs.cpp" />
     <ClCompile Include="GameInputManager.cpp" />
     <ClCompile Include="GameLog.cpp" />

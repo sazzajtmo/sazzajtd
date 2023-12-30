@@ -47,9 +47,6 @@
     <ClInclude Include="AnimatedTexture.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameBoardGenerator.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameLog.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -57,9 +54,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Utilities.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GunBuildingUnit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="AIUnit.h">
@@ -78,6 +72,9 @@
       <Filter>Source Files\GameObjects</Filter>
     </ClInclude>
     <ClInclude Include="StaticUnit.h">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="GunBuildingUnit.h">
       <Filter>Source Files\GameObjects</Filter>
     </ClInclude>
   </ItemGroup>
@@ -103,9 +100,6 @@
     <ClCompile Include="AnimatedTexture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameBoardGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameLog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -113,9 +107,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utilities.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GunBuildingUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AIUnit.cpp">
@@ -134,6 +125,9 @@
       <Filter>Source Files\GameObjects</Filter>
     </ClCompile>
     <ClCompile Include="StaticUnit.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="GunBuildingUnit.cpp">
       <Filter>Source Files\GameObjects</Filter>
     </ClCompile>
   </ItemGroup>

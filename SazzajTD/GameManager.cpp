@@ -7,7 +7,6 @@
 #include "GunBuildingUnit.h"
 #include "StaticUnit.h"
 #include "GameBoard.h"
-#include "GameBoardGenerator.h"
 #include "GameRenderer.h"
 #include "MemHelper.h"
 #include <algorithm>
@@ -201,7 +200,7 @@ std::shared_ptr<cGameObject> cGameManager::GetClosestGameObject(eGameObjectTypes
 		if (distToOrigin <= maxRadius && distToOrigin > minDistance)
 		{
 			minDistance	= distToOrigin;
-			minIndex	= i;
+			minIndex	= static_cast<int>(i);
 		}
 	}
 
