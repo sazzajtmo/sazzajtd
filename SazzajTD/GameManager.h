@@ -9,8 +9,7 @@
 
 class cGameObject;
 class cGameBoard;
-
-
+class cGameScoreManager;
 
 class cGameManager final
 {
@@ -37,6 +36,9 @@ public:
 			void							GetGameObjectsInRadius(eGameObjectTypes objectType, std::vector<std::shared_ptr<cGameObject>>& objects, const tVector2Df& origin, float radius) const;
 			[[nodiscard]]
 			std::shared_ptr<cGameObject>	GetClosestGameObject(eGameObjectTypes objectType, const tVector2Df& origin, float maxRadius) const;
+			[[nodiscard]]
+			std::shared_ptr<cGameScoreManager>
+											GetScoreManager() const;
 
 private:
 			template<class T>
@@ -60,6 +62,8 @@ private:
 											m_despawnList;
 
 			std::shared_ptr<cGameBoard>		m_gameBoard;
+			std::shared_ptr<cGameScoreManager>
+											m_scoreMgr;
 
 			float							m_spawnTimer		= 1.f;
 			float							m_changeBoardTimer	= 10.f;

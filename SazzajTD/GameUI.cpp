@@ -18,6 +18,9 @@
 #include "nuklear.h"
 #include "nuklear_sdl_renderer.h"
 
+#include "GameManager.h"
+#include "GameScoreManager.h"
+
 cGameUI* cGameUI::s_instance(nullptr);
 
 static nk_context* g_ctx;
@@ -150,6 +153,8 @@ void cGameUI::InputEnd()
 
 void cGameUI::Update(float deltaTime)
 {
+    float totalGameScore = cGameManager::GetInstance()->GetScoreManager()->GetScore();
+
     nk_colorf bg;
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
 
@@ -158,7 +163,7 @@ void cGameUI::Update(float deltaTime)
         nk_layout_row_static(g_ctx, 1, 80, 2);
         nk_layout_row_static(g_ctx, 10, 80, 2);
         nk_label(g_ctx, "Score", NK_TEXT_LEFT);
-        nk_label(g_ctx, "4500", NK_TEXT_LEFT);
+        nk_label(g_ctx, std::format("{:g}", totalGameScore).c_str(), NK_TEXT_LEFT);
 
         //enum { EASY, HARD };
         //static int op = EASY;

@@ -151,6 +151,7 @@
     <ClInclude Include="GameManager.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GameRenderer.h" />
+    <ClInclude Include="GameScoreManager.h" />
     <ClInclude Include="GameUI.h" />
     <ClInclude Include="GunBuildingUnit.h" />
     <ClInclude Include="MemHelper.h" />
@@ -173,6 +174,7 @@
     <ClCompile Include="GameManager.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameRenderer.cpp" />
+    <ClCompile Include="GameScoreManager.cpp" />
     <ClCompile Include="GameUI.cpp" />
     <ClCompile Include="GunBuildingUnit.cpp" />
     <ClCompile Include="PlayerUnit.cpp" />

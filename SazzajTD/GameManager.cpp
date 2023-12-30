@@ -8,6 +8,7 @@
 #include "StaticUnit.h"
 #include "GameBoard.h"
 #include "GameRenderer.h"
+#include "GameScoreManager.h"
 #include "MemHelper.h"
 #include <algorithm>
 
@@ -41,6 +42,9 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
+	m_scoreMgr.reset();
+	m_scoreMgr = std::make_shared<cGameScoreManager>();
+
 	for (auto& gameObject : m_gameObjects)
 	{
 		DespawnObject( gameObject );
@@ -157,6 +161,8 @@ void cGameManager::Update(float deltaTime)
 
 		SpawnObject<cAIUnit>();
 	}
+
+	m_scoreMgr->Update(deltaTime);
 }
 
 void cGameManager::Draw()
@@ -205,6 +211,11 @@ std::shared_ptr<cGameObject> cGameManager::GetClosestGameObject(eGameObjectTypes
 	}
 
 	return minIndex != -1 ? m_gameObjects[minIndex] : nullptr;
+}
+
+std::shared_ptr<cGameScoreManager> cGameManager::GetScoreManager() const
+{
+	return m_scoreMgr;
 }
 
 

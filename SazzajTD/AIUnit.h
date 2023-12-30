@@ -21,6 +21,9 @@ public:
 	inline	float						GetSpeedFactor() const			{ return m_speedFactor;  }
 
 			void						ReceiveDamage(float dmgValue);
+			void						OnDeath();
+			void						OnReachingExitPoint();
+
 
 protected:
 			tGameTransform				m_targetPos;

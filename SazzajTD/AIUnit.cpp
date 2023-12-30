@@ -9,6 +9,7 @@
 #include "GameLog.h"
 #include "GameDefs.h"
 #include "StaticUnit.h"
+#include "GameScoreManager.h"
 
 const std::vector<const char*> g_aiModels = 
 {
@@ -60,18 +61,7 @@ void cAIUnit::Update(float deltaTime)
 
 	if (m_health <= 0.f)
 	{
-		std::shared_ptr<cGameObject> newGameObject = cGameManager::GetInstance()->SpawnObject(eGameObjectTypes::Static, m_transform);
-		cStaticUnit* staticUnit = dynamic_cast<cStaticUnit*>(newGameObject.get());
-
-		if (staticUnit)
-		{
-			staticUnit->SetModel("characters/dead.png");
-			staticUnit->SetLifetime(4.f);
-		}
-		
-		cGameManager::GetInstance()->DespawnObject(shared_from_this());
-
-		return;
+		return OnDeath();
 	}
 
 #ifdef RANDOM_MOVEMENT
@@ -102,7 +92,7 @@ void cAIUnit::Update(float deltaTime)
 	}
 	else
 	{
-		cGameManager::GetInstance()->DespawnObject( shared_from_this() );
+		return OnReachingExitPoint();
 	}
 
 	m_speedFactor = 1.f; //reset speed factor every frame. other external factor may change it, but need to change it on frame.
@@ -145,6 +135,27 @@ void cAIUnit::Draw()
 
 void cAIUnit::ReceiveDamage(float dmgValue)
 {
-	m_health = std::clamp(m_health - dmgValue, 0.f, GameConfig::values.enemy_hp);
-	
+	m_health = std::clamp(m_health - dmgValue, 0.f, GameConfig::values.enemy_hp);	
+}
+
+void cAIUnit::OnDeath()
+{
+	std::shared_ptr<cGameObject> newGameObject = cGameManager::GetInstance()->SpawnObject(eGameObjectTypes::Static, m_transform);
+	cStaticUnit* staticUnit = dynamic_cast<cStaticUnit*>(newGameObject.get());
+
+	if (staticUnit)
+	{
+		staticUnit->SetModel("characters/dead.png");
+		staticUnit->SetLifetime(4.f);
+	}
+
+	cGameManager::GetInstance()->GetScoreManager()->AddScore(eGameScoreSource::EnemyDeath);
+
+	cGameManager::GetInstance()->DespawnObject(shared_from_this());
+}
+
+void cAIUnit::OnReachingExitPoint()
+{
+	cGameManager::GetInstance()->GetScoreManager()->AddScore(eGameScoreSource::AllyDeath);
+	cGameManager::GetInstance()->DespawnObject(shared_from_this());
 }
