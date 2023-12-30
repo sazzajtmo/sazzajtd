@@ -99,6 +99,7 @@ void cGameBoard::Init()
 
 			if (m_selectedCellBuildable && mouseEvent.button == cGameInputManager::eMouseButton::Left)
 			{
+				m_grid[m_selectedCell.y][m_selectedCell.x] = static_cast<int>(eGridCellType::Empty);
 				tGameTransform transform;
 				transform.position = tVector2Df{ static_cast<float>(m_selectedCell.x * tileSize + tileSize * 0.5f), static_cast<float>(m_selectedCell.y * tileSize + tileSize * 0.5f) };
 				cGameManager::GetInstance()->SpawnObject( eGameObjectTypes::GunBuilding, transform );

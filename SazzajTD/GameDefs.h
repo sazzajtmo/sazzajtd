@@ -4,6 +4,7 @@
 enum class eGameObjectTypes
 {
 	None = 0,
+	Static,	//rendered texture, nothing more
 	Board,
 	Player,
 	Enemy,

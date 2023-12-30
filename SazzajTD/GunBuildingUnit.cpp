@@ -29,10 +29,8 @@ void cGunBuildingUnit::Update(float deltaTime)
 
 	if (m_fireTimer <= 0.f)
 	{
-		std::vector<std::shared_ptr<cGameObject>> proximityObjects;
-
 		std::shared_ptr<cGameObject> closestEnemy = cGameManager::GetInstance()->GetClosestGameObject(eGameObjectTypes::Enemy, m_transform.position, GameConfig::values.building_gun_radius);
-
+		
 		if (closestEnemy)
 		{
 			dynamic_cast<cAIUnit*>(closestEnemy.get())->ReceiveDamage(GameConfig::values.building_gun_damage);

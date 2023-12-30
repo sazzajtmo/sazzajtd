@@ -8,6 +8,7 @@
 #include "GameBoard.h"
 #include "GameLog.h"
 #include "GameDefs.h"
+#include "StaticUnit.h"
 
 const std::vector<const char*> g_aiModels = 
 {
@@ -59,7 +60,17 @@ void cAIUnit::Update(float deltaTime)
 
 	if (m_health <= 0.f)
 	{
+		std::shared_ptr<cGameObject> newGameObject = cGameManager::GetInstance()->SpawnObject(eGameObjectTypes::Static, m_transform);
+		cStaticUnit* staticUnit = dynamic_cast<cStaticUnit*>(newGameObject.get());
+
+		if (staticUnit)
+		{
+			staticUnit->SetModel("characters/dead.png");
+			staticUnit->SetLifetime(4.f);
+		}
+		
 		cGameManager::GetInstance()->DespawnObject(shared_from_this());
+
 		return;
 	}
 
@@ -129,6 +140,7 @@ void cAIUnit::Draw()
 
 	if ((1.f - normHealth) > FLT_EPSILON)
 		cGameRenderer::GetInstance()->DrawLine(hpMid, hpEnd, 0xffff0000);
+
 }
 
 void cAIUnit::ReceiveDamage(float dmgValue)

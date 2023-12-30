@@ -4,6 +4,7 @@
 #include "Utilities.h"
 #include "GameDefs.h"
 #include <memory>
+#include <string>
 
 //base class for Game Objects
 //game objects can be enemy units, ally buildings, static objects, etc.
@@ -30,6 +31,8 @@ public:
 
 			[[nodiscard]]
 			eGameObjectTypes			GetType() const;
+
+			void						SetModel(const std::string& pathToTexture);
 
 protected:
 	std::unique_ptr<cAnimatedTexture>	m_model;

@@ -9,6 +9,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\GameObjects">
+      <UniqueIdentifier>{a6e3f603-4784-4808-8faf-ef59f4622e82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -29,25 +32,13 @@
     <ClInclude Include="GameManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameDefs.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="GameRenderer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="AIUnit.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameBoard.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameInputManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PlayerUnit.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="MemHelper.h">
@@ -65,14 +56,29 @@
     <ClInclude Include="GameUI.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="BuildingUnit.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utilities.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="GunBuildingUnit.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AIUnit.h">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="BuildingUnit.h">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerUnit.h">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="GameBoard.h">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticUnit.h">
+      <Filter>Source Files\GameObjects</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -85,25 +91,13 @@
     <ClCompile Include="GameManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameDefs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AIUnit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameBoard.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="GameInputManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PlayerUnit.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="AnimatedTexture.cpp">
@@ -118,14 +112,29 @@
     <ClCompile Include="GameUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BuildingUnit.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GunBuildingUnit.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AIUnit.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="BuildingUnit.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerUnit.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="GameBoard.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Source Files\GameObjects</Filter>
+    </ClCompile>
+    <ClCompile Include="StaticUnit.cpp">
+      <Filter>Source Files\GameObjects</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -60,3 +60,8 @@ eGameObjectTypes cGameObject::GetType() const
 {
 	return m_type;
 }
+
+void cGameObject::SetModel(const std::string& pathToTexture)
+{
+	m_model = cAnimatedTexture::Load(pathToTexture);
+}

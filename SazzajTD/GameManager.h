@@ -25,7 +25,7 @@ public:
 			bool							Init();
 			void							Cleanup();
 
-			void							SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform);
+			std::shared_ptr<cGameObject>	SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform);
 			void							DespawnObject( std::shared_ptr<cGameObject> gameObject );
 
 			void							Update( float deltaTime );
@@ -61,7 +61,7 @@ private:
 
 			std::shared_ptr<cGameBoard>		m_gameBoard;
 
-			float							m_spawnTimer		= 0.f;
+			float							m_spawnTimer		= 1.f;
 			float							m_changeBoardTimer	= 10.f;
 };
 

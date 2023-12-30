@@ -5,6 +5,7 @@
 #include "PlayerUnit.h"
 #include "BuildingUnit.h"
 #include "GunBuildingUnit.h"
+#include "StaticUnit.h"
 #include "GameBoard.h"
 #include "GameBoardGenerator.h"
 #include "GameRenderer.h"
@@ -55,7 +56,6 @@ bool cGameManager::Init()
 	m_gameBoard = std::make_unique<cGameBoard>();
 	m_gameBoard->Init();
 	
-
 	//SpawnObject<cAIUnit>();
 	//SpawnObject<cPlayerUnit>();
 
@@ -78,12 +78,16 @@ void cGameManager::Cleanup()
 	}
 }
 
-void cGameManager::SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform)
+std::shared_ptr<cGameObject> cGameManager::SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform)
 {
 	std::shared_ptr<cGameObject> newObject;
 
 	switch (objectType)
 	{
+		case eGameObjectTypes::Static:
+			newObject = SpawnObject<cStaticUnit>();
+		break;
+
 		case eGameObjectTypes::Enemy:
 			newObject = SpawnObject<cAIUnit>();
 			break;
@@ -104,6 +108,8 @@ void cGameManager::SpawnObject(eGameObjectTypes objectType, const tGameTransform
 
 	if (newObject)
 		newObject->SetPosition(transform.position);
+
+	return newObject;
 }
 
 void cGameManager::DespawnObject(std::shared_ptr<cGameObject> gameObject)
@@ -139,8 +145,10 @@ void cGameManager::Update(float deltaTime)
 	if( m_gameBoard )
 		m_gameBoard->Update( deltaTime );
 
-	for( auto& gameObject : m_gameObjects )
-		gameObject->Update( deltaTime );
+	const size_t numGameObjects = m_gameObjects.size();
+
+	for( size_t i = 0; i < numGameObjects; i++ )
+		m_gameObjects[i]->Update(deltaTime);	//new game objects may spawn here
 
 	m_spawnTimer -= deltaTime;
 
