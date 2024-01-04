@@ -9,6 +9,7 @@
 #include "GameInputManager.h"
 #include "GameUI.h"
 #include "MemHelper.h"
+#include "GameLog.h"
 
 #pragma comment( lib, "SDL2.lib" )
 #pragma comment( lib, "SDL2_image.lib" )
@@ -48,7 +49,7 @@ bool cAppManager::Init()
 
 	if (SDL_Init(SDL_INIT_EVERYTHING) == -1)
 	{
-		SDL_Log("SDL init failed %s", SDL_GetError());
+		GAME_LOG("SDL init failed %s", SDL_GetError());
 		return false;
 	}
 
@@ -60,7 +61,7 @@ bool cAppManager::Init()
 
 	if( !m_window )
 	{ 
-		SDL_Log( "SDL_CreateWindow failed %s", SDL_GetError() );
+		GAME_LOG( "SDL_CreateWindow failed %s", SDL_GetError() );
 		return false;
 	}
 
@@ -69,7 +70,7 @@ bool cAppManager::Init()
 
 	if( !cGameManager::GetInstance()->Init() )
 	{
-		SDL_Log( "cGameManager::GetInstance()->Init() failed");
+		GAME_LOG( "cGameManager::GetInstance()->Init() failed");
 		return false;
 	}
 
@@ -124,7 +125,7 @@ void cAppManager::MainLoop()
 
 				case SDL_EventType::SDL_MOUSEBUTTONUP:  /* keep track of the latest mouse position */
 					/* center the square where the mouse is */
-					//SDL_Log( "hello %d", event.button.button );
+					//GAME_LOG( "hello %d", event.button.button );
 					mouseposrect.x = event.motion.x - (mouseposrect.w / 2);
 					mouseposrect.y = event.motion.y - (mouseposrect.h / 2);
 
@@ -148,7 +149,7 @@ void cAppManager::MainLoop()
 
 		cGameManager::GetInstance()->Update( deltaTime );
 		cGameManager::GetInstance()->Draw();
-		//SDL_Log( "delta %0.3f", deltaTime );
+		//GAME_LOG( "delta %0.3f", deltaTime );
 
 		cGameUI::GetInstance()->Update(deltaTime);
 

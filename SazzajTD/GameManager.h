@@ -31,7 +31,12 @@ public:
 			void							Update( float deltaTime );
 			void							Draw();
 
-	inline	std::shared_ptr<cGameBoard>		GetGameBoard()	{ return m_gameBoard; }
+	inline	std::shared_ptr<cGameBoard>		GetGameBoard() const					{ return m_gameBoard; }
+
+			//TODO change this to a get and switchTo that has a Begin/End functions for states
+			//works for now
+	inline	eGameState						GetGameState() const					{ return m_gameState; }
+	inline	void							SetGameState( eGameState gameState )	{ m_gameState = gameState; }
 			
 			//utilities
 			void							GetGameObjectsInRadius(eGameObjectTypes objectType, std::vector<std::shared_ptr<cGameObject>>& objects, const tVector2Df& origin, float radius) const;
@@ -66,8 +71,9 @@ private:
 			std::shared_ptr<cGameScoreManager>
 											m_scoreMgr;
 
+			eGameState						m_gameState			= eGameState::StartUp; //TODO change this to a get and switchTo that has a Begin/End functions for states
+
 			float							m_spawnTimer		= 1.f;
-			float							m_changeBoardTimer	= 10.f;
 };
 
 #endif

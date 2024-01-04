@@ -128,14 +128,8 @@ void cGameManager::DespawnObject(std::shared_ptr<cGameObject> gameObject)
 
 void cGameManager::Update(float deltaTime)
 {
-	m_changeBoardTimer -= deltaTime;
-
-	if (m_changeBoardTimer <= 0.f)
-	{
-		m_changeBoardTimer = 10.f;
-		//Init();
+	if( m_gameState != eGameState::Playing )
 		return;
-	}
 
 	//should use index rather than pointers
 	for (auto& gameObject : m_despawnList)

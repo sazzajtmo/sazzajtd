@@ -5,6 +5,7 @@
 #include "SDL_rect.h"
 #include "MemHelper.h"
 #include <algorithm>
+#include "GameLog.h"
 
 
 cGameRenderer* cGameRenderer::s_instance( nullptr );
@@ -44,7 +45,7 @@ bool cGameRenderer::Init( SDL_Window* window, const tVector2Df& renderOffset )
 
 	if (!m_renderer)
 	{
-		SDL_Log( "SDL_CreateRenderer failed %s", SDL_GetError() );
+		GAME_LOG( "SDL_CreateRenderer failed %s", SDL_GetError() );
 		return false;
 	}
 

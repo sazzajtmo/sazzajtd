@@ -12,6 +12,9 @@
     <Filter Include="Source Files\GameObjects">
       <UniqueIdentifier>{a6e3f603-4784-4808-8faf-ef59f4622e82}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\UI">
+      <UniqueIdentifier>{da174dc6-18ee-4445-aab8-b7cf50c389bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -50,9 +53,6 @@
     <ClInclude Include="GameLog.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameUI.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Utilities.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -80,6 +80,9 @@
     <ClInclude Include="GameScoreManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameUI.h">
+      <Filter>Source Files\UI</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SazzajTD.cpp">
@@ -104,9 +107,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameLog.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Utilities.cpp">
@@ -135,6 +135,9 @@
     </ClCompile>
     <ClCompile Include="GameScoreManager.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GameUI.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

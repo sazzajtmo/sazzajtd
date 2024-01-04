@@ -2,6 +2,8 @@
 #include <format>
 #include <cstdarg>
 #include <iostream>
+#include <filesystem>
+#include <functional>
 
 #include "SDL.h"
 #include "SDL_main.h"
@@ -18,8 +20,12 @@
 #include "nuklear.h"
 #include "nuklear_sdl_renderer.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "GameManager.h"
 #include "GameScoreManager.h"
+#include "GameRenderer.h"
 
 cGameUI* cGameUI::s_instance(nullptr);
 
@@ -36,9 +42,9 @@ cGameUI::~cGameUI()
 cGameUI* cGameUI::GetInstance()
 {
 	if( !s_instance )
-		s_instance = new cGameUI();
+		s_instance = snew cGameUI();
 
-	return nullptr;
+	return s_instance;
 }
 
 void cGameUI::DestroyInstance()
@@ -53,6 +59,13 @@ void cGameUI::DestroyInstance()
 
 void cGameUI::Init( SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer )
 {
+    //m_uiStates = 
+    //{
+    //    { eGameState::StartUp, []( float deltaTime ){ cGameUI::GetInstance()->UpdateStartUp(deltaTime); } },
+    //    { eGameState::Playing, [](float deltaTime) { cGameUI::GetInstance()->UpdatePlaying(deltaTime); } },
+    //    { eGameState::Paused, [](float deltaTime) { cGameUI::GetInstance()->UpdatePaused(deltaTime); } }
+    //};
+
     /* scale the renderer output for High-DPI displays */
     float font_scale = 1.f;
 
@@ -60,10 +73,11 @@ void cGameUI::Init( SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer )
         int render_w, render_h;
         int window_w, window_h;
         float scale_x, scale_y;
+        SDL_GetRendererOutputSize(sdlRenderer, &m_renderW, &m_renderH);
         SDL_GetRendererOutputSize(sdlRenderer, &render_w, &render_h);
         SDL_GetWindowSize(sdlWindow, &window_w, &window_h);
-        scale_x = (float)(render_w) / (float)(window_w);
-        scale_y = (float)(render_h) / (float)(window_h);
+        scale_x = (float)(m_renderW) / (float)(window_w);
+        scale_y = (float)(m_renderH) / (float)(window_h);
         SDL_RenderSetScale(sdlRenderer, scale_x, scale_y);
         font_scale = scale_y;
     }
@@ -134,6 +148,57 @@ void cGameUI::Init( SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer )
     //buttonStyle.padding.y += 4.f;
     //buttonStyle.border += 4.f;
     //g_ctx->style.button = buttonStyle;
+
+    static std::vector<std::filesystem::path> imagePaths = 
+    {
+        "ui/kenneyAck.png",
+        "ui/gogoLogo.png",
+    };
+
+    static int nkImgID = 0;
+    nkImgID++;
+
+#define SDL_IMP
+#ifdef SDL_IMP
+    for (const auto& path : imagePaths)
+    {
+        std::string imageName = path.filename().string();
+        SDL_Texture* sdlTex = cGameRenderer::GetInstance()->GetSDLTexture(path.string().c_str());
+        int imgW, imgH;
+        SDL_QueryTexture(sdlTex, nullptr, nullptr, &imgW, &imgH);
+
+        std::unique_ptr<struct nk_image> nkImgPtr = std::make_unique<struct nk_image>();
+        nkImgPtr->handle.ptr = (void*)sdlTex;
+        nkImgPtr->region[0] = 0;
+        nkImgPtr->region[1] = 0;
+        nkImgPtr->region[2] = imgW;
+        nkImgPtr->region[3] = imgH;
+        nkImgPtr->w = imgW;
+        nkImgPtr->h = imgH;
+        m_images[imageName] = std::move(nkImgPtr);
+    }
+#else SDL_IMP
+    for (const auto& path : imagePaths)
+    {
+        std::string imageName = path.filename().string();
+        int imgW, imgH, imgChan;
+        auto imgData = stbi_load( path.string().c_str(), &imgW, &imgH, &imgChan, 0);
+
+        if (imgData)
+        {
+            std::unique_ptr<struct nk_image> nkImgPtr = std::make_unique<struct nk_image>();
+            //cGameRed
+            nkImgPtr->handle.ptr    = imgData;
+            nkImgPtr->region[0]     = 0;
+            nkImgPtr->region[1]     = 0;
+            nkImgPtr->region[2]     = 0;
+            nkImgPtr->region[3]     = 0;
+            nkImgPtr->w             = imgW; 
+            nkImgPtr->h             = imgH;
+            m_images[imageName] = std::move(nkImgPtr);
+        }
+    }
+#endif
 }
 
 void cGameUI::Cleanup()
@@ -158,62 +223,88 @@ void cGameUI::InputEnd()
 
 void cGameUI::Update(float deltaTime)
 {
-    static float lastScore = 0.f;
-    float totalGameScore    = cGameManager::GetInstance()->GetScoreManager()->GetScore();
-    float scoreDiff         = ( totalGameScore - lastScore );
-
-    lastScore = totalGameScore;
-    
-    nk_colorf bg;
-    bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
-
-    if (nk_begin(g_ctx, "Score & Stuff", nk_rect(0, 0, 300, 30), NK_WINDOW_NO_SCROLLBAR))
+    static std::unordered_map<eGameState, std::function<void(float)>> uiStates =
     {
-        g_ctx->style.text.color = nk_rgba(210, 210, 210, 255);
-        nk_layout_row_static(g_ctx, 1, 60, 3);
-        nk_layout_row_static(g_ctx, 10, 60, 3);
-        nk_label(g_ctx, "Score", NK_TEXT_LEFT);
-        g_ctx->style.text.color = scoreDiff < 0.f ? nk_rgb(255, 0, 0) : nk_rgba(210, 210, 210, 255);
-        nk_label(g_ctx, std::format("{:g}", totalGameScore).c_str(), NK_TEXT_LEFT);
+        { eGameState::StartUp, [](float deltaTime) { cGameUI::GetInstance()->UpdateStartUp(deltaTime); } },
+        { eGameState::Playing, [](float deltaTime) { cGameUI::GetInstance()->UpdatePlaying(deltaTime); } },
+        { eGameState::Paused, [](float deltaTime) { cGameUI::GetInstance()->UpdatePaused(deltaTime); } }
+    };
+
+    const eGameState gameState = cGameManager::GetInstance()->GetGameState();
+
+    uiStates[gameState]( deltaTime );
+}
+
+void cGameUI::Draw()
+{
+    nk_sdl_render(NK_ANTI_ALIASING_ON);
+}
+
+void cGameUI::UpdateStartUp(float deltaTime)
+{
+    static const float menuColsRatio[] = { 0.2f, 0.6f, 0.2f };
+
+    if (nk_begin(g_ctx, "Start Menu", nk_rect(0, 0, m_renderW, m_renderH), 0))
+    {
+        nk_layout_row_static( g_ctx, m_renderH / 2, 15, 1 );
+
+        nk_layout_row( g_ctx, NK_DYNAMIC, 40, 3, menuColsRatio );
+
+        nk_spacing( g_ctx, 1 );
+        
+        if (nk_button_label(g_ctx, "Start"))
+        {
+            cGameManager::GetInstance()->SetGameState( eGameState::Playing );
+        }
+
+        nk_spacing(g_ctx, 1);
+
+        nk_spacing(g_ctx, 1);
+
+        if (nk_button_label(g_ctx, "Start Paused"))
+        {
+            cGameManager::GetInstance()->SetGameState(eGameState::Paused);
+        }
+
+        nk_spacing(g_ctx, 1);
+
+        const auto& kenneyLogo = m_images["kenneyAck.png"];
+        nk_draw_image(&g_ctx->current->buffer, nk_rect(m_renderW - kenneyLogo->w - 20, m_renderH - kenneyLogo->h, kenneyLogo->w, kenneyLogo->h), kenneyLogo.get(), nk_white);
+
+        const auto& logo = m_images["gogoLogo.png"];
+        nk_draw_image(&g_ctx->current->buffer, nk_rect( ( m_renderW - logo->w ) / 2, m_renderH / 2 - logo->h, logo->w, logo->h), logo.get(), nk_white);
+    }
+
+    nk_end(g_ctx);
+}
+
+void cGameUI::UpdatePaused(float deltaTime)
+{
+    UpdatePlaying( deltaTime );
+}
+
+void cGameUI::UpdatePlaying(float deltaTime)
+{
+    eGameState  gameState       = cGameManager::GetInstance()->GetGameState();
+    float       totalGameScore  = cGameManager::GetInstance()->GetScoreManager()->GetScore();
+
+    if (nk_begin(g_ctx, "Menu", nk_rect(0, 0, m_renderW, 30), NK_WINDOW_NO_SCROLLBAR))
+    {
+        nk_layout_row_static(g_ctx, 22, 80, 5);
+        nk_label(g_ctx, "Score :", NK_TEXT_LEFT);
+        nk_label(g_ctx, std::format("{:g}", totalGameScore).c_str(), NK_TEXT_RIGHT);
+
+        nk_spacing(g_ctx, 1);
 
         if (nk_button_label(g_ctx, "Reset"))
         {
             cGameManager::GetInstance()->Reset();
         }
 
-        //g_ctx->style.text.color = scoreDiff < 0.f ? nk_rgb(255, 0, 0) : nk_rgb(0, 255, 0);
-        //nk_label(g_ctx, std::format("({}{:g})", scoreDiff < 0.f ? "-" : "+", scoreDiff).c_str(), NK_TEXT_LEFT);
-        //enum { EASY, HARD };
-        //static int op = EASY;
-        //static int property = 20;
-
-        //nk_layout_row_static(g_ctx, 30, 80, 1);
-        //if (nk_button_label(g_ctx, "button"))
-        //    fprintf(stdout, "button pressed\n");
-        //nk_layout_row_dynamic(g_ctx, 30, 2);
-        //if (nk_option_label(g_ctx, "easy", op == EASY)) op = EASY;
-        //if (nk_option_label(g_ctx, "hard", op == HARD)) op = HARD;
-        //nk_layout_row_dynamic(g_ctx, 25, 1);
-        //nk_property_int(g_ctx, "Compression:", 0, &property, 100, 10, 1);
-
-        //nk_layout_row_dynamic(g_ctx, 20, 1);
-        //nk_label(g_ctx, "background:", NK_TEXT_LEFT);
-        //nk_layout_row_dynamic(g_ctx, 25, 1);
-        //if (nk_combo_begin_color(g_ctx, nk_rgb_cf(bg), nk_vec2(nk_widget_width(g_ctx), 400))) {
-        //    nk_layout_row_dynamic(g_ctx, 120, 1);
-        //    bg = nk_color_picker(g_ctx, bg, NK_RGBA);
-        //    nk_layout_row_dynamic(g_ctx, 25, 1);
-        //    bg.r = nk_propertyf(g_ctx, "#R:", 0, bg.r, 1.0f, 0.01f, 0.005f);
-        //    bg.g = nk_propertyf(g_ctx, "#G:", 0, bg.g, 1.0f, 0.01f, 0.005f);
-        //    bg.b = nk_propertyf(g_ctx, "#B:", 0, bg.b, 1.0f, 0.01f, 0.005f);
-        //    bg.a = nk_propertyf(g_ctx, "#A:", 0, bg.a, 1.0f, 0.01f, 0.005f);
-        //    nk_combo_end(g_ctx);
-        //}
+        if (nk_button_label(g_ctx, gameState == eGameState::Playing ? "Pause" : "Resume" ))
+        {
+            cGameManager::GetInstance()->SetGameState( gameState == eGameState::Playing ? eGameState::Paused : eGameState::Playing );
+        }
     }
     nk_end(g_ctx);
-}
-
-void cGameUI::Draw()
-{
-    nk_sdl_render(NK_ANTI_ALIASING_ON);
 }

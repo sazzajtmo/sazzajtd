@@ -4,6 +4,12 @@
 struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
+enum class eGameState;
+struct nk_image;
+
+#include <unordered_map>
+#include <string>
+#include <memory>
 
 class cGameUI final
 {
@@ -24,8 +30,18 @@ public:
 			void			Update( float deltaTime );
 			void			Draw();
 
+			void			UpdateStartUp(float deltaTime);
+			void			UpdatePaused(float deltaTime);
+			void			UpdatePlaying(float deltaTime);
+
 private:
 	static	cGameUI*		s_instance;
+
+			int				m_renderW = 0;
+			int				m_renderH = 0;
+
+			std::unordered_map<std::string, std::unique_ptr<struct nk_image>>
+							m_images;
 };
 
 #endif

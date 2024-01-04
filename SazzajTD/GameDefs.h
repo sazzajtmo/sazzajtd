@@ -4,6 +4,13 @@
 #include <array>
 #include <string>
 
+enum class eGameState : int
+{
+	StartUp = 0,
+	Playing,
+	Paused
+};
+
 enum class eGameObjectTypes
 {
 	None = 0,
