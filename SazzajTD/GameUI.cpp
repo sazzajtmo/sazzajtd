@@ -129,6 +129,11 @@ void cGameUI::Init( SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer )
         table[NK_COLOR_TAB_HEADER] = nk_rgba(48, 83, 111, 255);
         nk_style_from_table(g_ctx, table);
     }
+
+    //auto buttonStyle = g_ctx->style.button;
+    //buttonStyle.padding.y += 4.f;
+    //buttonStyle.border += 4.f;
+    //g_ctx->style.button = buttonStyle;
 }
 
 void cGameUI::Cleanup()
@@ -153,18 +158,31 @@ void cGameUI::InputEnd()
 
 void cGameUI::Update(float deltaTime)
 {
-    float totalGameScore = cGameManager::GetInstance()->GetScoreManager()->GetScore();
+    static float lastScore = 0.f;
+    float totalGameScore    = cGameManager::GetInstance()->GetScoreManager()->GetScore();
+    float scoreDiff         = ( totalGameScore - lastScore );
 
+    lastScore = totalGameScore;
+    
     nk_colorf bg;
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
 
-    if (nk_begin(g_ctx, "Score & Stuff", nk_rect(0, 0, 200, 30), NK_WINDOW_NO_SCROLLBAR))
+    if (nk_begin(g_ctx, "Score & Stuff", nk_rect(0, 0, 300, 30), NK_WINDOW_NO_SCROLLBAR))
     {
-        nk_layout_row_static(g_ctx, 1, 80, 2);
-        nk_layout_row_static(g_ctx, 10, 80, 2);
+        g_ctx->style.text.color = nk_rgba(210, 210, 210, 255);
+        nk_layout_row_static(g_ctx, 1, 60, 3);
+        nk_layout_row_static(g_ctx, 10, 60, 3);
         nk_label(g_ctx, "Score", NK_TEXT_LEFT);
+        g_ctx->style.text.color = scoreDiff < 0.f ? nk_rgb(255, 0, 0) : nk_rgba(210, 210, 210, 255);
         nk_label(g_ctx, std::format("{:g}", totalGameScore).c_str(), NK_TEXT_LEFT);
 
+        if (nk_button_label(g_ctx, "Reset"))
+        {
+            cGameManager::GetInstance()->Reset();
+        }
+
+        //g_ctx->style.text.color = scoreDiff < 0.f ? nk_rgb(255, 0, 0) : nk_rgb(0, 255, 0);
+        //nk_label(g_ctx, std::format("({}{:g})", scoreDiff < 0.f ? "-" : "+", scoreDiff).c_str(), NK_TEXT_LEFT);
         //enum { EASY, HARD };
         //static int op = EASY;
         //static int property = 20;

@@ -25,6 +25,9 @@ cGameBoard::~cGameBoard()
 
 void cGameBoard::Cleanup()
 {
+	cGameInputManager::GetInstance()->UnRegisterForMouseEvent( m_mouseCbId );
+	m_mouseCbId = -1;
+
 	for( auto& gridPoint : m_walkPoints )
 		delete gridPoint;
 
@@ -80,7 +83,7 @@ void cGameBoard::Init()
 		m_endPointModel->SetFramerate(4.f);
 	}
 
-	cGameInputManager::GetInstance()->RegisterForMouseEvent([this, tileSize](const cGameInputManager::tMouseEventData& mouseEvent)
+	m_mouseCbId = cGameInputManager::GetInstance()->RegisterForMouseEvent([this, tileSize](const cGameInputManager::tMouseEventData& mouseEvent)
 	{
 			//just motion data
 			//if (mouseEvent.button != cGameInputManager::eMouseButton::None)

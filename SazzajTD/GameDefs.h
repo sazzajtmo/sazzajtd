@@ -7,12 +7,12 @@
 enum class eGameObjectTypes
 {
 	None = 0,
-	Static,	//rendered texture, nothing more
 	Board,
-	Player,
-	Enemy,
+	Static,	//rendered texture, nothing more
 	Building,
-	GunBuilding
+	GunBuilding,
+	Player,
+	Enemy
 };
 
 enum class eGameScoreSource : int

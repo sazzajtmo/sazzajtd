@@ -65,6 +65,11 @@ bool cGameManager::Init()
 	return true;
 }
 
+bool cGameManager::Reset()
+{
+	return Init();
+}
+
 void cGameManager::Cleanup()
 {
 	for (auto& gameObject : m_gameObjects)

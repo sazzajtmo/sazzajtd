@@ -32,14 +32,17 @@ void cGameObject::Update(float deltaTime)
 		m_model->Update(deltaTime);
 		float modelW, modelH;
 		m_model->GetFrameDims(modelW, modelH);
-		m_model->SetPosition(m_transform.position - tVector2Df(modelW * 0.5f, modelH * 0.5f));
+		m_model->SetPosition(m_transform.position - tVector2Df(modelW * 0.5f, modelH * 0.5f));		
 	}
 }
 
 void cGameObject::Draw()
 {
 	if (m_model)
+	{
+		m_model->SetPriority(static_cast<int>(m_type));
 		m_model->Draw();
+	}
 }
 
 void cGameObject::DrawDebug()

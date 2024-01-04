@@ -104,7 +104,8 @@ void cGameRenderer::Render()
 	//	SDL_RenderCopy( m_renderer.get(), m_bgTexture, 0, &posRect);
 	//}
 
-	std::sort(m_renderedTextures.begin(), m_renderedTextures.end(), [](const tDrawTex& lh, const tDrawTex& rh) { return rh.prio > lh.prio; });
+	//std::sort(m_renderedTextures.begin(), m_renderedTextures.end(), [](const tDrawTex& lh, const tDrawTex& rh) { return rh.prio > lh.prio; });
+	std::ranges::sort( m_renderedTextures, std::less{}, &tDrawTex::prio );
 
 	SDL_Rect clipRect, posRect;
 

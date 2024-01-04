@@ -22,6 +22,7 @@ public:
 	static	void							DestroyInstance();
 
 			bool							Init();
+			bool							Reset();
 			void							Cleanup();
 
 			std::shared_ptr<cGameObject>	SpawnObject(eGameObjectTypes objectType, const tGameTransform& transform);

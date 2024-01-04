@@ -64,6 +64,7 @@ private:
 
 			std::string							m_boardName	= "";
 
+			int									m_mouseCbId = -1;
 			tVector2D<int>						m_selectedCell{ -1, -1 };
 			bool								m_selectedCellBuildable{ false };
 		
