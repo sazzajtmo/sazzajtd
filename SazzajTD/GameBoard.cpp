@@ -13,6 +13,7 @@
 #include "BuildingUnit.h"
 #include <array>
 #include <ranges>
+#include <unordered_set>
 
 cGameBoard::cGameBoard()
 : cGameObject(eGameObjectTypes::Board)
@@ -52,7 +53,7 @@ void cGameBoard::Init()
 	const int boardCols = 27;
 	const int junctions	= 3 + std::rand() % 7;
 
-	m_grid = CreateGameBoard( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
+	m_grid = CreateGameBoardWithDiagonalPathing( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
 
 	cGameRenderer::GetInstance()->ExportGridToFile(m_grid, tileSize, m_boardName);
 	//cGameRenderer::GetInstance()->SetBackground(boardNameTextureFileName);
@@ -107,7 +108,7 @@ void cGameBoard::Init()
 				m_grid[m_selectedCell.y][m_selectedCell.x] = static_cast<int>(eGridCellType::Empty);
 				tGameTransform transform;
 				transform.position = tVector2Df{ static_cast<float>(m_selectedCell.x * tileSize + tileSize * 0.5f), static_cast<float>(m_selectedCell.y * tileSize + tileSize * 0.5f) };
-				eGameObjectTypes nextBuildingType = cGameManager::GetInstance()->GetCurrentBuildingType();
+				eGameObjectTypes nextBuildingType = cGameManager::GetInstance()->GetAndUpdateCurrentBuildingType();
 				cGameManager::GetInstance()->SpawnObject( nextBuildingType, transform );
 			}
 	});
@@ -179,7 +180,7 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 
 	auto linkNeighbours = [this]( tPoint* gridPoint, int x, int y, const std::vector<std::vector<int>>& neighboursIndices, const std::vector<std::vector<int8_t>>& grid )
 	{
-		if (y < 0 || x >= neighboursIndices[0].size() || grid[y][x] != static_cast<int8_t>(eGridCellType::Walkable))
+		if (y < 0 || x >= neighboursIndices[0].size() || !IsCellWalkable( grid[y][x] ) )
 			return;
 
 		int boardCellIdx = neighboursIndices[y][x];
@@ -205,9 +206,9 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 	{
 		for( int x = 0; x < cols; x++ )
 		{
-			if (grid[y][x] != static_cast<int8_t>(eGridCellType::Walkable)
-				&& ( y == 0 || grid[y-1][x] != static_cast<int8_t>(eGridCellType::Walkable))
-				&& ( x == 0 || grid[y][x-1] != static_cast<int8_t>(eGridCellType::Walkable)))
+			if (!IsCellWalkable( grid[y][x] )
+				&& ( y == 0 || !IsCellWalkable( grid[y-1][x] ) )
+				&& ( x == 0 || !IsCellWalkable( grid[y][x-1] ) ) )
 				continue;
 
 			tPoint* newGridPoint = snew tPoint();
@@ -219,7 +220,7 @@ void cGameBoard::InitPathfinding( const std::vector<std::vector<int8_t>>& grid, 
 			linkNeighbours(newGridPoint, x - 1	, y - 1	, neighbours, grid);	//NW
 			linkNeighbours(newGridPoint, x		, y - 1	, neighbours, grid);	//N
 
-			if( y > 0 && grid[y-1][x] == static_cast<int8_t>(eGridCellType::Walkable))
+			if( y > 0 && IsCellWalkable( grid[y-1][x] ) )
 				linkNeighbours(newGridPoint, x + 1	, y - 1	, neighbours, grid);	//NE
 
 			m_walkPoints.push_back(newGridPoint);
@@ -522,7 +523,7 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 
 			while (yJunc != linkToY)
 			{
-				grid[yJunc][linkFromX]	= static_cast<int8_t>(eGridCellType::Walkable);
+				grid[yJunc][linkFromX]	|= static_cast<int8_t>(eGridCellType::Walkable);
 				yJunc += yJunc > linkToY ? -1 : 1;
 			}
 
@@ -530,7 +531,7 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 
 			while (xJunc != linkToX)
 			{
-				grid[linkToY][xJunc]	= static_cast<int8_t>(eGridCellType::Walkable);
+				grid[linkToY][xJunc]	|= static_cast<int8_t>(eGridCellType::Walkable);
 				xJunc += xJunc > linkToX ? -1 : 1;
 			}
 		};
@@ -549,10 +550,10 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 		for (int x = 1; x < cols-1; x++)
 		{
 			if (grid[y][x] == static_cast<int8_t>(eGridCellType::Empty)
-				&& (grid[y - 1][x] == static_cast<int8_t>(eGridCellType::Walkable)
-					|| grid[y + 1][x] == static_cast<int8_t>(eGridCellType::Walkable)
-					|| grid[y][x - 1] == static_cast<int8_t>(eGridCellType::Walkable)
-					|| grid[y][x + 1] == static_cast<int8_t>(eGridCellType::Walkable)))
+				&& ( IsCellWalkable( grid[y - 1][x] )
+					|| IsCellWalkable( grid[y + 1][x] )
+					|| IsCellWalkable( grid[y][x - 1] )
+					|| IsCellWalkable( grid[y][x + 1] )))
 				grid[y][x] = static_cast<int8_t>(eGridCellType::Buildable);
 		}
 	}
@@ -575,4 +576,165 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoard(int tileSize, int r
 	exitPointF.x = static_cast<float>(exitPoint.second * tileSize + smallError );
 
 	return grid;
+}
+
+std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoardWithDiagonalPathing(int tileSize, int rows, int cols, int numJunctions, tVector2Df& entryPointF, tVector2Df& exitPointF)
+{
+	std::vector<std::vector<int8_t>> grid(rows, std::vector<int8_t>(cols));
+
+	for (auto& gridLine : grid)
+		memset(gridLine.data(), static_cast<int8_t>(eGridCellType::Empty), gridLine.size());
+
+	std::pair<int, int> entryPoint = { std::rand() % rows, 0 };
+
+	std::vector<std::pair<int, int>> junctions;
+
+	for (int i = 0; i < numJunctions; i++)
+	{
+		junctions.push_back({ (std::rand() % (rows - 2)) + 1, (std::rand() % (cols - 2)) + 1 });
+	}
+
+	std::sort(junctions.begin(), junctions.end(), [](const std::pair<int, int>& lh, const std::pair<int, int>& rh)
+	{
+		return lh.second < rh.second;
+	});
+
+	std::unordered_set<int> colUsed;
+
+	for (int i = static_cast<int>(junctions.size()) - 1; i >= 0; i--)
+	{
+		if (colUsed.count(junctions[i].second) != 0)
+		{
+			junctions.erase( junctions.begin() + i );
+			continue;
+		}
+
+		colUsed.insert(junctions[i].second);
+	}
+
+	junctions.insert(junctions.begin(), entryPoint);
+
+	//exit point is last junction position projected on the right edge of the board
+	std::pair<int, int> exitPoint = { std::rand() % rows, cols - 1 }; ;//junctions.back();
+	//exitPoint.second = cols - 1;
+	junctions.push_back(exitPoint);
+
+	grid[entryPoint.first][entryPoint.second] = static_cast<int8_t>(eGridCellType::Walkable);
+	grid[exitPoint.first][exitPoint.second] = static_cast<int8_t>(eGridCellType::Walkable);
+
+	auto linkJunctionsManhatten = [&grid](const std::pair<int, int>& linkFrom, const std::pair<int, int>& linkTo)
+	{
+		const auto [linkToY, linkToX] = linkTo;
+		const auto [linkFromY, linkFromX] = linkFrom;
+
+		int yJunc = linkFromY;
+
+		while (yJunc != linkToY)
+		{
+			grid[yJunc][linkFromX] |= static_cast<int8_t>(eGridCellType::Walkable);
+			yJunc += yJunc > linkToY ? -1 : 1;
+		}
+
+		int xJunc = linkFromX;
+
+		while (xJunc != linkToX)
+		{
+			grid[linkToY][xJunc] |= static_cast<int8_t>(eGridCellType::Walkable);
+			xJunc += xJunc > linkToX ? -1 : 1;
+		}
+	};
+
+	auto linkJunctions = [&grid, linkJunctionsManhatten](const std::pair<int, int>& linkFrom, const std::pair<int, int>& linkTo)
+	{
+		tVector2Df lastStart;
+		tVector2Df start{ static_cast<float>(linkFrom.second), static_cast<float>(linkFrom.first) };
+		tVector2Df end{ static_cast<float>(linkTo.second), static_cast<float>(linkTo.first) };
+		tVector2Df dir{ directionNormalized( start, end ) };
+		float step = 0.2f;
+		const int numRows = static_cast<int>(grid.size());
+		const int numCols = static_cast<int>(grid[0].size());
+
+		while (distance(start, end) > 0.2f)
+		{
+			lastStart = start;
+			start += dir * step;
+			int lastGridX	= static_cast<int>(std::lround(lastStart.x));
+			int lastGridY	= static_cast<int>(std::lround(lastStart.y));
+			int gridX		= static_cast<int>(std::lround(start.x));
+			int gridY		= static_cast<int>(std::lround(start.y));
+			int gridAddY	= dir.x > 0 ? (gridY + 1 < numRows ? 1 : 0) : (gridY - 1 > 0 ? -1 : 0);
+			int gridAddX	= dir.x < 0 ? (gridX + 1 < numCols ? 1 : 0) : (gridX - 1 > 0 ? -1 : 0);
+
+			grid[gridY][gridX] |= static_cast<int8_t>(eGridCellType::Walkable);
+
+			linkJunctionsManhatten( { lastGridY, lastGridX }, { gridY, gridX } );
+		}
+	};
+
+	//generate a simple path through junctions connecting entry and exit points
+	for (int i = 1; i < (int)junctions.size(); i++)
+	{
+		if (std::rand() % 2)
+			linkJunctions(junctions[i-1], junctions[i]);
+		else
+			linkJunctionsManhatten(junctions[i - 1], junctions[i]);
+	}
+
+	//create cycles
+	const int numCycles = std::rand() % ( ( numJunctions + 2 ) / 3 ); //entry & exit points are junctions
+
+	for (int cycle = 0; cycle < numCycles; cycle++)
+	{
+		int startJunction	= 1 + std::rand() % (static_cast<int>(junctions.size()) - 1);
+		int endJunction		= 1 + std::rand() % (static_cast<int>(junctions.size()) - 1);
+
+		if( std::rand() % 2 )
+			linkJunctions(junctions[startJunction], junctions[endJunction]);
+		else
+			linkJunctionsManhatten(junctions[startJunction], junctions[endJunction]);
+	}
+	//
+
+	//generate buildable
+	for (int y = 1; y < rows - 1; y++)
+	{
+		for (int x = 1; x < cols - 1; x++)
+		{
+			if (grid[y][x] == static_cast<int8_t>(eGridCellType::Empty)
+				&& (   IsCellWalkable( grid[y - 1][x] )
+					|| IsCellWalkable( grid[y + 1][x] )
+					|| IsCellWalkable( grid[y][x - 1] )
+					|| IsCellWalkable( grid[y][x + 1] )))
+				grid[y][x] = static_cast<int8_t>(eGridCellType::Buildable);
+		}
+	}
+
+	//debugging
+	for (int i = 0; i < (int)junctions.size(); i++)
+	{
+		const auto& junction = junctions[i];
+
+		grid[junction.first][junction.second] |= static_cast<int8_t>(eGridCellType::Junction);
+	}
+
+	float smallError = 0.f;// tileSize * 0.2f;
+
+	//yes inverted because I'm stupid
+	entryPointF.y = static_cast<float>(entryPoint.first * tileSize + smallError);
+	entryPointF.x = static_cast<float>(entryPoint.second * tileSize + smallError);
+
+	exitPointF.y = static_cast<float>(exitPoint.first * tileSize + smallError);
+	exitPointF.x = static_cast<float>(exitPoint.second * tileSize + smallError);
+
+	return grid;
+}
+
+bool cGameBoard::IsCellWalkable(int8_t cellValue)
+{
+	return ((cellValue & static_cast<int8_t>(eGridCellType::Walkable)) != 0);
+}
+
+bool cGameBoard::IsBuildable(int8_t cellValue)
+{
+	return ((cellValue & static_cast<int8_t>(eGridCellType::Buildable)) != 0);
 }

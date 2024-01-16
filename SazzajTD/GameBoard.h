@@ -15,7 +15,8 @@ public:
 	{
 		Empty		= 0,
 		Walkable	= ( 1 << 0 ),
-		Buildable	= ( 1 << 1 )
+		Buildable	= ( 1 << 1 ),
+		Junction	= ( 1 << 2 )
 	};
 
 	struct tPoint
@@ -48,8 +49,13 @@ public:
 	inline	const tVector2Df&					GetExitPoint() const	{ return m_exitPoint; }
 
 	static	std::vector<std::vector<int8_t>>	CreateGameBoard(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint);
+	static	std::vector<std::vector<int8_t>>	CreateGameBoardWithDiagonalPathing(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint);
 
 	inline	std::string							GetBoardName() const	{ return m_boardName;  }
+
+private:
+	static	bool								IsCellWalkable( int8_t cellValue );
+	static	bool								IsBuildable( int8_t cellValue );
 
 private:
 			std::vector<std::vector<int8_t>>	m_grid;

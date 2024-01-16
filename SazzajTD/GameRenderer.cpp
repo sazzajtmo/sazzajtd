@@ -297,6 +297,11 @@ void cGameRenderer::SetBackground(const std::string& pathToFileTexture)
 
 void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& grid, int tileSize, const std::string& gridName)
 {
+	//duplicate, want no dependency between render and gameboard for now
+	auto isWalkable	= [](int8_t cellValue){ return ((cellValue & 1) != 0);};
+	auto isJunction	= [](int8_t cellValue) { return ((cellValue & 4) != 0); };
+	auto isEmpty	= [](int8_t cellValue) { return cellValue == 0; };
+
 	std::string gridTextureFileName			= gridName + ".png";
 	std::string gridWalkableTextureFileName = gridName + "_WalkMask.png";
 
@@ -313,7 +318,11 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 	{
 		for (int x = 0; x < numCols; x++)
 		{
-			tColor		cellColor = grid[y][x] == 1 ? 0xffffffff : 0xff0f0f0f;
+			tColor		cellColor = isWalkable( grid[y][x] ) ? 0xffffffff : 0xff0f0f0f;
+
+			if( isJunction(grid[y][x]))
+				cellColor = 0xffff0000;
+
 			SDL_Rect	bitRect;
 			bitRect.w = tileSize;
 			bitRect.h = tileSize;
@@ -383,7 +392,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 			posRect.y = y * tileSize;
 			posRect.w = tileSize;
 			posRect.h = tileSize;
-			SDL_Texture* tileTexture = grid[y][x] == 0 && std::rand() % 100 > 80 ? grassTextures[rand()%numGrassTextures] : simpleGrass;
+			SDL_Texture* tileTexture = isEmpty( grid[y][x] ) && std::rand() % 100 > 80 ? grassTextures[rand()%numGrassTextures] : simpleGrass;
 			SDL_RenderCopy( m_renderer.get(), tileTexture, nullptr, &posRect );
 		}
 	}
@@ -404,7 +413,7 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 		const int y = std::rand() % numRows;
 		auto pair = std::make_pair( x, y );
 
-		if( decorationPlacements.count( pair ) > 0 || grid[y][x] != 0)
+		if( decorationPlacements.count( pair ) > 0 || !isEmpty(grid[y][x]) )
 			continue;
 
 		decorationPlacements.insert( pair );
@@ -421,18 +430,18 @@ void cGameRenderer::ExportGridToFile(const std::vector<std::vector<int8_t>>& gri
 	{
 		for (int x = 0; x < (int)grid[y].size(); x++)
 		{
-			if (grid[y][x] != 1)
+			if (!isWalkable(grid[y][x]))
 				continue;
 
 			std::string roadPrefix = "";
 
-			if( x-1 >= 0 && grid[y][x-1] == 1 )
+			if( x-1 >= 0 && isWalkable(grid[y][x-1]) )
 				roadPrefix += "W";
-			if( y-1 >= 0 && grid[y-1][x] == 1)
+			if( y-1 >= 0 && isWalkable(grid[y-1][x]) )
 				roadPrefix += "N";
-			if (x+1 < (int) grid[y].size() && grid[y][x + 1] == 1)
+			if (x+1 < (int) grid[y].size() && isWalkable(grid[y][x + 1]) )
 				roadPrefix += "E";
-			if (y + 1 < (int) grid.size() && grid[y + 1][x] == 1)
+			if (y + 1 < (int) grid.size() && isWalkable(grid[y + 1][x]) )
 				roadPrefix += "S";
 
 			SDL_Texture* tileTexture = roadPrefix.empty() ? grassTextures[rand()%3] : roadTextures["road_"+roadPrefix];

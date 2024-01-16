@@ -46,7 +46,7 @@ public:
 			[[nodiscard]]
 			std::shared_ptr<cGameScoreManager>
 											GetScoreManager() const;
-			eGameObjectTypes				GetCurrentBuildingType();
+			eGameObjectTypes				GetAndUpdateCurrentBuildingType();
 			eGameObjectTypes				GetCurrentBuildingType() const;
 	inline	int								GetNumAvailableBuildings() const		{ return m_numBuildingsLeft; }
 

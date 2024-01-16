@@ -225,7 +225,7 @@ std::shared_ptr<cGameScoreManager> cGameManager::GetScoreManager() const
 	return m_scoreMgr;
 }
 
-eGameObjectTypes cGameManager::GetCurrentBuildingType()
+eGameObjectTypes cGameManager::GetAndUpdateCurrentBuildingType()
 {
 	eGameObjectTypes nextBuilding = m_nextBuilding;
 
