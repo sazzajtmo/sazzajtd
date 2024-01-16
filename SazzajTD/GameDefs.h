@@ -16,8 +16,12 @@ enum class eGameObjectTypes
 	None = 0,
 	Board,
 	Static,	//rendered texture, nothing more
-	Building,
+
+	Buildings_Start,
+	Building = Buildings_Start,
 	GunBuilding,
+	Buildings_End = GunBuilding,
+
 	Player,
 	Enemy
 };
@@ -34,9 +38,11 @@ namespace GameConfig
 {
 	static struct
 	{
+		int			buildings				= 20;
+
 		float		enemy_hp				= 100.f;
-		float		enemy_speed				= 100.f;
-		float		enemy_spawn_rate		= 5.f;	//enemies per second
+		float		enemy_speed				= 80.f;
+		float		enemy_spawn_rate		= 2.f;	//enemies per second
 
 		float		building_slow_radius	= 60.f;
 		float		building_slow_factor	= 0.2f;

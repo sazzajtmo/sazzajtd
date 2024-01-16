@@ -153,13 +153,13 @@ void cGameUI::Init( SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer )
     {
         "ui/kenneyAck.png",
         "ui/gogoLogo.png",
+        "buildings/building_slow.png",
+        "buildings/building_gun.png"
     };
 
     static int nkImgID = 0;
     nkImgID++;
 
-#define SDL_IMP
-#ifdef SDL_IMP
     for (const auto& path : imagePaths)
     {
         std::string imageName = path.filename().string();
@@ -177,28 +177,6 @@ void cGameUI::Init( SDL_Window* sdlWindow, SDL_Renderer* sdlRenderer )
         nkImgPtr->h = imgH;
         m_images[imageName] = std::move(nkImgPtr);
     }
-#else SDL_IMP
-    for (const auto& path : imagePaths)
-    {
-        std::string imageName = path.filename().string();
-        int imgW, imgH, imgChan;
-        auto imgData = stbi_load( path.string().c_str(), &imgW, &imgH, &imgChan, 0);
-
-        if (imgData)
-        {
-            std::unique_ptr<struct nk_image> nkImgPtr = std::make_unique<struct nk_image>();
-            //cGameRed
-            nkImgPtr->handle.ptr    = imgData;
-            nkImgPtr->region[0]     = 0;
-            nkImgPtr->region[1]     = 0;
-            nkImgPtr->region[2]     = 0;
-            nkImgPtr->region[3]     = 0;
-            nkImgPtr->w             = imgW; 
-            nkImgPtr->h             = imgH;
-            m_images[imageName] = std::move(nkImgPtr);
-        }
-    }
-#endif
 }
 
 void cGameUI::Cleanup()
@@ -285,14 +263,36 @@ void cGameUI::UpdatePaused(float deltaTime)
 
 void cGameUI::UpdatePlaying(float deltaTime)
 {
-    eGameState  gameState       = cGameManager::GetInstance()->GetGameState();
-    float       totalGameScore  = cGameManager::GetInstance()->GetScoreManager()->GetScore();
+    eGameState  gameState           = cGameManager::GetInstance()->GetGameState();
+    float       totalGameScore      = cGameManager::GetInstance()->GetScoreManager()->GetScore();
+    int         numBuildingsLeft    = cGameManager::GetInstance()->GetNumAvailableBuildings();
 
     if (nk_begin(g_ctx, "Menu", nk_rect(0, 0, m_renderW, 30), NK_WINDOW_NO_SCROLLBAR))
     {
-        nk_layout_row_static(g_ctx, 22, 80, 5);
+        //nk_layout_row_static(g_ctx, 22, 80, 7);
+        nk_layout_row_dynamic(g_ctx, 22, 8);
         nk_label(g_ctx, "Score :", NK_TEXT_LEFT);
-        nk_label(g_ctx, std::format("{:g}", totalGameScore).c_str(), NK_TEXT_RIGHT);
+        nk_label(g_ctx, std::format("{:g}", totalGameScore).c_str(), NK_TEXT_LEFT);
+        nk_label(g_ctx, "# Blds :", NK_TEXT_LEFT);
+        nk_label(g_ctx, std::format("{:d}", numBuildingsLeft).c_str(), NK_TEXT_LEFT);
+        nk_label(g_ctx, "Next :", NK_TEXT_LEFT);
+
+        if (numBuildingsLeft > 0)
+        {            
+            constexpr int numBuildingTypes = static_cast<int>(eGameObjectTypes::Buildings_End) + static_cast<int>(eGameObjectTypes::Buildings_Start) + 1;
+
+            static const std::array<std::string, numBuildingTypes> buildingIcons =
+            {
+                "building_slow.png",
+                "building_gun.png"
+            };
+
+            eGameObjectTypes nextBuildingType = cGameManager::GetConstInstance()->GetCurrentBuildingType();
+            int buildingIconIdx = std::clamp( static_cast<int>(nextBuildingType) - static_cast<int>(eGameObjectTypes::Buildings_Start), 0, numBuildingTypes );
+
+            const auto& buildingIcon = m_images[buildingIcons[buildingIconIdx]];
+            nk_draw_image(&g_ctx->current->buffer, nk_rect(386, 0, buildingIcon->w * 1.5, buildingIcon->h * 1.5), buildingIcon.get(), nk_white);
+        }
 
         nk_spacing(g_ctx, 1);
 

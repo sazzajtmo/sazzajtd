@@ -1,7 +1,7 @@
 * add UI -> https://github.com/Immediate-Mode-UI/Nuklear
 	- time spent HUD
 	- (done) generic score
-	- reset button (regenerate)
+	- (done) reset button (regenerate)
 * add building types (spawn random)
 	- (done) damage building (kill on hit, rate of fire, rage of fire)
 	- (done) slow building (slow unit in proximity)

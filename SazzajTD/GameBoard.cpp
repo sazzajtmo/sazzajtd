@@ -85,6 +85,9 @@ void cGameBoard::Init()
 
 	m_mouseCbId = cGameInputManager::GetInstance()->RegisterForMouseEvent([this, tileSize](const cGameInputManager::tMouseEventData& mouseEvent)
 	{
+			if (cGameManager::GetInstance()->GetNumAvailableBuildings() <= 0)
+				return;
+
 			//just motion data
 			//if (mouseEvent.button != cGameInputManager::eMouseButton::None)
 			//	return;
@@ -104,7 +107,8 @@ void cGameBoard::Init()
 				m_grid[m_selectedCell.y][m_selectedCell.x] = static_cast<int>(eGridCellType::Empty);
 				tGameTransform transform;
 				transform.position = tVector2Df{ static_cast<float>(m_selectedCell.x * tileSize + tileSize * 0.5f), static_cast<float>(m_selectedCell.y * tileSize + tileSize * 0.5f) };
-				cGameManager::GetInstance()->SpawnObject( eGameObjectTypes::GunBuilding, transform );
+				eGameObjectTypes nextBuildingType = cGameManager::GetInstance()->GetCurrentBuildingType();
+				cGameManager::GetInstance()->SpawnObject( nextBuildingType, transform );
 			}
 	});
 }

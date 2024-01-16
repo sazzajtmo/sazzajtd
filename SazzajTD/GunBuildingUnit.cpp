@@ -36,7 +36,7 @@ void cGunBuildingUnit::Update(float deltaTime)
 			dynamic_cast<cAIUnit*>(closestEnemy.get())->ReceiveDamage(GameConfig::values.building_gun_damage);
 			m_fireTimer = 1.f / GameConfig::values.building_gun_firerate;
 
-			cGameRenderer::GetInstance()->DrawLine(m_transform.position, closestEnemy->GetPosition(), 0xffff0000);
+			cGameRenderer::GetInstance()->DrawLine(m_transform.position, closestEnemy->GetPosition(), 0x1fff0000);
 		}
 		else
 		{

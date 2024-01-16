@@ -30,6 +30,11 @@ cGameManager* cGameManager::GetInstance()
 	return s_instance;
 }
 
+const cGameManager* cGameManager::GetConstInstance()
+{
+	return GetInstance();
+}
+
 void cGameManager::DestroyInstance()
 {
 	if (s_instance)
@@ -42,6 +47,7 @@ void cGameManager::DestroyInstance()
 
 bool cGameManager::Init()
 {
+
 	m_scoreMgr.reset();
 	m_scoreMgr = std::make_shared<cGameScoreManager>();
 
@@ -59,6 +65,8 @@ bool cGameManager::Init()
 	m_gameBoard = std::make_unique<cGameBoard>();
 	m_gameBoard->Init();
 	
+	m_numBuildingsLeft = GameConfig::values.buildings;
+
 	//SpawnObject<cAIUnit>();
 	//SpawnObject<cPlayerUnit>();
 
@@ -215,6 +223,22 @@ std::shared_ptr<cGameObject> cGameManager::GetClosestGameObject(eGameObjectTypes
 std::shared_ptr<cGameScoreManager> cGameManager::GetScoreManager() const
 {
 	return m_scoreMgr;
+}
+
+eGameObjectTypes cGameManager::GetCurrentBuildingType()
+{
+	eGameObjectTypes nextBuilding = m_nextBuilding;
+
+	m_numBuildingsLeft--;
+	const int numBuildingTypes = static_cast<int>(eGameObjectTypes::Buildings_End) - static_cast<int>(eGameObjectTypes::Buildings_Start) + 1;
+	m_nextBuilding = static_cast<eGameObjectTypes>(static_cast<int>(eGameObjectTypes::Buildings_Start) + ( std::rand() % numBuildingTypes ) );
+
+	return nextBuilding;
+}
+
+eGameObjectTypes cGameManager::GetCurrentBuildingType() const
+{
+	return m_nextBuilding;
 }
 
 

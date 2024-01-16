@@ -19,6 +19,7 @@ private:
 
 public:
 	static	cGameManager*					GetInstance();
+	static	const cGameManager*				GetConstInstance();
 	static	void							DestroyInstance();
 
 			bool							Init();
@@ -45,6 +46,9 @@ public:
 			[[nodiscard]]
 			std::shared_ptr<cGameScoreManager>
 											GetScoreManager() const;
+			eGameObjectTypes				GetCurrentBuildingType();
+			eGameObjectTypes				GetCurrentBuildingType() const;
+	inline	int								GetNumAvailableBuildings() const		{ return m_numBuildingsLeft; }
 
 private:
 			template<class T>
@@ -74,6 +78,9 @@ private:
 			eGameState						m_gameState			= eGameState::StartUp; //TODO change this to a get and switchTo that has a Begin/End functions for states
 
 			float							m_spawnTimer		= 1.f;
+			
+			int								m_numBuildingsLeft	= GameConfig::values.buildings;
+			eGameObjectTypes				m_nextBuilding		= eGameObjectTypes::Buildings_Start;
 };
 
 #endif

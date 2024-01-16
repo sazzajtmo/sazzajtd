@@ -36,7 +36,7 @@ void cBuildingUnit::Update(float deltaTime)
 	for (const auto& object : proximityObjects)
 	{
 		dynamic_cast<cAIUnit*>(object.get())->SetSpeedFactor(GameConfig::values.building_slow_factor);
-		cGameRenderer::GetInstance()->DrawLine(object->GetPosition(), m_transform.position, 0xffff0000);
+		cGameRenderer::GetInstance()->DrawLine(object->GetPosition(), m_transform.position, 0xff00ffff);
 	}
 }
 
