@@ -13,11 +13,11 @@ Current experiments:
 
 # How it looks so far
 
-Newest
+### Newest
 ![Sazzaj Tower Defense sample gif](./Samples/SazzajTD_3.gif)
 ![Sazzaj Tower Defense sample gif](./Samples/SazzajTD_4.gif)
 
-Older
+### Older
 ![Sazzaj Tower Defense sample gif](./Samples/SazzajTD_1.gif)
 ![Sazzaj Tower Defense sample gif](./Samples/SazzajTD_2.gif)
 
