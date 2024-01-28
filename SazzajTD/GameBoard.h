@@ -50,6 +50,7 @@ public:
 
 	static	std::vector<std::vector<int8_t>>	CreateGameBoard(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint);
 	static	std::vector<std::vector<int8_t>>	CreateGameBoardWithDiagonalPathing(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint);
+	static	std::vector<std::vector<int8_t>>	CreateGameBoardWFC(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint);
 
 	inline	std::string							GetBoardName() const	{ return m_boardName;  }
 

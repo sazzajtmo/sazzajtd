@@ -14,6 +14,7 @@
 #include <array>
 #include <ranges>
 #include <unordered_set>
+#include <bit>
 
 cGameBoard::cGameBoard()
 : cGameObject(eGameObjectTypes::Board)
@@ -53,7 +54,8 @@ void cGameBoard::Init()
 	const int boardCols = 27;
 	const int junctions	= 3 + std::rand() % 7;
 
-	m_grid = CreateGameBoardWithDiagonalPathing( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
+	//m_grid = CreateGameBoardWithDiagonalPathing( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
+	m_grid = CreateGameBoardWFC(tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint);
 
 	cGameRenderer::GetInstance()->ExportGridToFile(m_grid, tileSize, m_boardName);
 	//cGameRenderer::GetInstance()->SetBackground(boardNameTextureFileName);
@@ -725,6 +727,130 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoardWithDiagonalPathing(
 
 	exitPointF.y = static_cast<float>(exitPoint.first * tileSize + smallError);
 	exitPointF.x = static_cast<float>(exitPoint.second * tileSize + smallError);
+
+	return grid;
+}
+
+std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoardWFC(int tileSize, int rows, int cols, int junctions, tVector2Df& entryPoint, tVector2Df& exitPoint)
+{
+	struct wfcCell
+	{
+		int8_t		value		= 0;
+		bool		collapsed	= false;
+		int8_t		left		= -1;
+		int8_t		top			= -1;
+		int8_t		right		= -1;
+		int8_t		bottom		= -1;
+	};
+
+	std::vector<std::vector<wfcCell>> wfcGrid(rows/3, std::vector<wfcCell>(cols/3));
+
+	auto prioQueComp = [&wfcGrid](const std::pair<int, int>& a, const std::pair<int, int>& b)
+	{
+		const wfcCell& lh = wfcGrid[a.first][a.second];
+		const wfcCell& rh = wfcGrid[b.first][b.second];
+
+		int lPosibilities = ( lh.left < 0 ? 2 : 1 ) + (lh.top < 0 ? 2 : 1) + (lh.right < 0 ? 2 : 1) + (lh.bottom < 0 ? 2 : 1);
+		int rPosibilities = ( rh.left < 0 ? 2 : 1 ) + (rh.top < 0 ? 2 : 1) + (rh.right < 0 ? 2 : 1) + (rh.bottom < 0 ? 2 : 1);
+
+		return lPosibilities < rPosibilities;
+	};
+
+	std::priority_queue<std::pair<int, int>, std::vector<std::pair<int,int>>, decltype(prioQueComp)> openQueue( prioQueComp );
+
+	openQueue.push( std::make_pair( rand()%(rows/3), rand()%(cols/3)));
+
+	auto getRandomValueForConnection = [](int8_t left, int8_t top, int8_t right, int8_t bottom)
+	{
+		int8_t value = 0;
+
+		value |= left < 0	? ((std::rand() % 2) << 3) : (left << 3);
+		value |= top < 0	? ((std::rand() % 2) << 2) : (top << 2);
+		value |= right < 0	? ((std::rand() % 2) << 1) : (right << 1);
+		value |= bottom < 0	? ((std::rand() % 2) << 0) : (bottom << 0);
+
+		return value;
+	};
+
+
+	while (!openQueue.empty())
+	{
+		auto [y, x] = openQueue.top(); openQueue.pop();
+		wfcCell& cell = wfcGrid[y][x];
+
+		cell.collapsed	= true;
+		cell.value		= getRandomValueForConnection( cell.left, cell.top, cell.right, cell.bottom );
+
+		if (x - 1 >= 0 && !wfcGrid[y][x - 1].collapsed)
+		{
+			wfcGrid[y][x-1].right	= (cell.value & (1 << 3)) > 0 ? 1 : 0;
+			openQueue.push(std::make_pair(y, x-1));
+		}
+
+		if (x + 1 < cols/3 && !wfcGrid[y][x + 1].collapsed)
+		{
+			wfcGrid[y][x+1].left	= (cell.value & (1 << 1)) > 0 ? 1 : 0;
+			openQueue.push(std::make_pair(y, x+1));
+		}
+
+		if (y - 1 >= 0 && !wfcGrid[y - 1][x].collapsed)
+		{
+			wfcGrid[y-1][x].bottom	= (cell.value & (1 << 2)) > 0 ? 1 : 0;
+			openQueue.push(std::make_pair(y-1, x));
+		}
+
+		if (y + 1 < rows/3 && !wfcGrid[y + 1][x].collapsed)
+		{
+			wfcGrid[y+1][x].top		= (cell.value & (1 << 0)) > 0 ? 1 : 0;
+			openQueue.push(std::make_pair(y+1, x));
+		}
+	}	
+	
+	std::vector<std::vector<int8_t>> grid(rows, std::vector<int8_t>(cols));
+
+	for (auto& gridLine : grid)
+		memset(gridLine.data(), static_cast<int8_t>(eGridCellType::Empty), gridLine.size());
+
+	for (int y = 0; y < rows / 3; y++)
+	{
+		for (int x = 0; x < cols / 3; x++)
+		{
+			wfcCell& cell = wfcGrid[y][x];
+
+			grid[y*3+1][x*3+1]	= cell.value != 0 ? static_cast<int8_t>(eGridCellType::Walkable) : static_cast<int8_t>(eGridCellType::Empty);
+			grid[y*3+0][x*3+1]	= (cell.value & (1 << 2)) > 0 ? static_cast<int8_t>(eGridCellType::Walkable) : static_cast<int8_t>(eGridCellType::Empty);
+			grid[y*3+2][x*3+1]	= (cell.value & (1 << 0)) > 0 ? static_cast<int8_t>(eGridCellType::Walkable) : static_cast<int8_t>(eGridCellType::Empty);
+			grid[y*3+1][x*3+0]	= (cell.value & (1 << 3)) > 0 ? static_cast<int8_t>(eGridCellType::Walkable) : static_cast<int8_t>(eGridCellType::Empty);
+			grid[y*3+1][x*3+2]	= (cell.value & (1 << 1)) > 0 ? static_cast<int8_t>(eGridCellType::Walkable) : static_cast<int8_t>(eGridCellType::Empty);
+		}
+	}
+
+	for (int y = 0; y < rows; y++)
+	{
+		//for (int x = 0; x < cols; x++)
+		{
+			if (grid[y][0] == static_cast<int8_t>(eGridCellType::Walkable))
+			{
+				entryPoint.y = static_cast<float>(y * tileSize);
+				entryPoint.x = static_cast<float>(0 * tileSize);
+				break;
+			}
+		}
+	}
+
+	//generate buildable
+	for (int y = 1; y < rows - 1; y++)
+	{
+		for (int x = 1; x < cols - 1; x++)
+		{
+			if (grid[y][x] == static_cast<int8_t>(eGridCellType::Empty)
+				&& (IsCellWalkable(grid[y - 1][x])
+					|| IsCellWalkable(grid[y + 1][x])
+					|| IsCellWalkable(grid[y][x - 1])
+					|| IsCellWalkable(grid[y][x + 1])))
+				grid[y][x] = static_cast<int8_t>(eGridCellType::Buildable);
+		}
+	}
 
 	return grid;
 }
