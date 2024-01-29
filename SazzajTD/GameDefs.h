@@ -34,22 +34,29 @@ enum class eGameScoreSource : int
 	Count
 };
 
+enum class eGameBoardType : int
+{
+	SimpleLoops,
+	HybridDiagonals,
+	WaveFunctionCollapse
+};
+
 namespace GameConfig
 {
 	static struct
 	{
-		int			buildings				= 20;
+		int					buildings				= 20;
 
-		float		enemy_hp				= 100.f;
-		float		enemy_speed				= 80.f;
-		float		enemy_spawn_rate		= 2.f;	//enemies per second
+		float				enemy_hp				= 100.f;
+		float				enemy_speed				= 80.f;
+		float				enemy_spawn_rate		= 2.f;	//enemies per second
 
-		float		building_slow_radius	= 60.f;
-		float		building_slow_factor	= 0.2f;
+		float				building_slow_radius	= 60.f;
+		float				building_slow_factor	= 0.2f;
 
-		float		building_gun_radius		= 60.f;
-		float		building_gun_damage		= 10.f;
-		float		building_gun_firerate	= 5.f;	//shot per second
+		float				building_gun_radius		= 60.f;
+		float				building_gun_damage		= 10.f;
+		float				building_gun_firerate	= 5.f;	//shot per second
 
 	} values;
 
@@ -69,6 +76,5 @@ namespace GameConfig
 		"Lifetime score per second" //Time - per second
 	};
 }
-
 
 #endif

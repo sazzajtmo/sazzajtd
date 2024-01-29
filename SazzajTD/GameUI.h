@@ -1,10 +1,11 @@
 #ifndef GAME_UI_H
 #define GAME_UI_H
 
+#include "GameDefs.h"
+
 struct SDL_Window;
 struct SDL_Renderer;
 union SDL_Event;
-enum class eGameState;
 struct nk_image;
 
 #include <unordered_map>
@@ -42,6 +43,7 @@ private:
 
 			std::unordered_map<std::string, std::unique_ptr<struct nk_image>>
 							m_images;
+			int				m_gameBoardType{ static_cast<int>(eGameBoardType::SimpleLoops)};
 };
 
 #endif

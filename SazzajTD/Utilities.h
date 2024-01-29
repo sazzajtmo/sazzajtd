@@ -37,6 +37,7 @@ struct tVector2D
 	tVector2D() : x(), y() {}
 	tVector2D( T v ): x( v ), y( v ) {}
 	tVector2D( T _x, T _y ): x( _x ), y( _y ) {}
+	tVector2D( std::pair<T,T> _vPair ): tVector2D( _vPair.first, _vPair.second ) {}
 
 	tVector2D<T>& operator+=(const tVector2D<T>& rh)
 	{
@@ -61,7 +62,7 @@ struct tGameTransform
 template<typename T>
 T distance(const tVector2D<T>& lh, const tVector2D<T>& rh)
 {
-	return static_cast<T>( std::sqrt( ( lh.x - rh.x ) * ( lh.x - rh.x ) + ( lh.y - rh.y ) * ( lh.y - rh.y ) ) );
+	return static_cast<T>(std::sqrt((lh.x - rh.x) * (lh.x - rh.x) + (lh.y - rh.y) * (lh.y - rh.y)));
 }
 
 template<typename T>

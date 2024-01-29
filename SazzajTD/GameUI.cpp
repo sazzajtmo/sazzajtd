@@ -26,6 +26,7 @@
 #include "GameManager.h"
 #include "GameScoreManager.h"
 #include "GameRenderer.h"
+#include "GameBoard.h"
 
 cGameUI* cGameUI::s_instance(nullptr);
 
@@ -224,7 +225,7 @@ void cGameUI::UpdateStartUp(float deltaTime)
 
     if (nk_begin(g_ctx, "Start Menu", nk_rect(0, 0, m_renderW, m_renderH), 0))
     {
-        nk_layout_row_static( g_ctx, m_renderH / 2, 15, 1 );
+        nk_layout_row_static( g_ctx, 150, 15, 1 );
 
         nk_layout_row( g_ctx, NK_DYNAMIC, 40, 3, menuColsRatio );
 
@@ -232,6 +233,12 @@ void cGameUI::UpdateStartUp(float deltaTime)
         
         if (nk_button_label(g_ctx, "Start"))
         {
+			if (cGameBoard::s_gameBoardType != static_cast<eGameBoardType>(m_gameBoardType))
+			{
+				cGameBoard::s_gameBoardType = static_cast<eGameBoardType>(m_gameBoardType);
+				cGameManager::GetInstance()->Reset();
+			}
+
             cGameManager::GetInstance()->SetGameState( eGameState::Playing );
         }
 
@@ -241,16 +248,43 @@ void cGameUI::UpdateStartUp(float deltaTime)
 
         if (nk_button_label(g_ctx, "Start Paused"))
         {
+			if (cGameBoard::s_gameBoardType != static_cast<eGameBoardType>(m_gameBoardType))
+			{
+				cGameBoard::s_gameBoardType = static_cast<eGameBoardType>(m_gameBoardType);
+				cGameManager::GetInstance()->Reset();
+			}
+
             cGameManager::GetInstance()->SetGameState(eGameState::Paused);
         }
 
         nk_spacing(g_ctx, 1);
 
+		nk_spacing(g_ctx, 1);
+
+		if (nk_button_symbol_label(g_ctx, !(static_cast<eGameBoardType>(m_gameBoardType) == eGameBoardType::SimpleLoops) ? NK_SYMBOL_CIRCLE_OUTLINE : NK_SYMBOL_CIRCLE_SOLID, "Board Type Simple", NK_TEXT_LEFT))
+			m_gameBoardType = static_cast<int>(eGameBoardType::SimpleLoops);
+
+		nk_spacing(g_ctx, 1);
+
+		nk_spacing(g_ctx, 1);
+
+		if (nk_button_symbol_label(g_ctx, !(static_cast<eGameBoardType>(m_gameBoardType) == eGameBoardType::HybridDiagonals) ? NK_SYMBOL_CIRCLE_OUTLINE : NK_SYMBOL_CIRCLE_SOLID, "Board Type Diagonals", NK_TEXT_LEFT))
+			m_gameBoardType = static_cast<int>(eGameBoardType::HybridDiagonals);
+
+		nk_spacing(g_ctx, 1);
+
+		nk_spacing(g_ctx, 1);
+
+		if (nk_button_symbol_label(g_ctx, !(static_cast<eGameBoardType>(m_gameBoardType) == eGameBoardType::WaveFunctionCollapse) ? NK_SYMBOL_CIRCLE_OUTLINE : NK_SYMBOL_CIRCLE_SOLID, "Board Type WFC", NK_TEXT_LEFT))
+			m_gameBoardType = static_cast<int>(eGameBoardType::WaveFunctionCollapse);
+
+		nk_spacing(g_ctx, 1);
+
         const auto& kenneyLogo = m_images["kenneyAck.png"];
         nk_draw_image(&g_ctx->current->buffer, nk_rect(m_renderW - kenneyLogo->w - 20, m_renderH - kenneyLogo->h, kenneyLogo->w, kenneyLogo->h), kenneyLogo.get(), nk_white);
 
         const auto& logo = m_images["gogoLogo.png"];
-        nk_draw_image(&g_ctx->current->buffer, nk_rect( ( m_renderW - logo->w ) / 2, m_renderH / 2 - logo->h, logo->w, logo->h), logo.get(), nk_white);
+        nk_draw_image(&g_ctx->current->buffer, nk_rect( ( m_renderW - logo->w ) / 2, 150 - logo->h, logo->w, logo->h), logo.get(), nk_white);
     }
 
     nk_end(g_ctx);

@@ -27,6 +27,8 @@ public:
 		std::vector<tPoint*>	neighbours;
 	};
 
+	static	eGameBoardType						s_gameBoardType;
+
 public:
 	cGameBoard();
 	virtual ~cGameBoard();

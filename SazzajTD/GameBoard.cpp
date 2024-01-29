@@ -16,6 +16,8 @@
 #include <unordered_set>
 #include <bit>
 
+eGameBoardType cGameBoard::s_gameBoardType{eGameBoardType::SimpleLoops};
+
 cGameBoard::cGameBoard()
 : cGameObject(eGameObjectTypes::Board)
 {
@@ -54,8 +56,21 @@ void cGameBoard::Init()
 	const int boardCols = 27;
 	const int junctions	= 3 + std::rand() % 7;
 
-	//m_grid = CreateGameBoardWithDiagonalPathing( tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint );
-	m_grid = CreateGameBoardWFC(tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint);
+	switch(s_gameBoardType)
+	{
+		case eGameBoardType::HybridDiagonals: 
+			m_grid = CreateGameBoardWithDiagonalPathing(tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint);
+		break;
+		
+		case eGameBoardType::WaveFunctionCollapse: 
+			m_grid = CreateGameBoardWFC(tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint);
+		break;
+
+		default:
+		case eGameBoardType::SimpleLoops: 
+			m_grid = CreateGameBoard(tileSize, boardRows, boardCols, junctions, m_entryPoint, m_exitPoint);
+		break;
+	}
 
 	cGameRenderer::GetInstance()->ExportGridToFile(m_grid, tileSize, m_boardName);
 	//cGameRenderer::GetInstance()->SetBackground(boardNameTextureFileName);
@@ -825,14 +840,67 @@ std::vector<std::vector<int8_t>> cGameBoard::CreateGameBoardWFC(int tileSize, in
 		}
 	}
 
+	auto getFurthestEndCell = []( const std::vector<std::vector<int8_t>>& grid, const std::pair<int, int>& startCell )
+	{
+		const int									rows		= static_cast<int>( grid.size() );
+		const int									cols		= static_cast<int>( grid[0].size() );
+		int											maxDist		= -1;
+		std::pair<int,int>							farthest	= startCell;
+		std::queue<std::pair<int,int>>				frontier;
+		std::set<std::pair<int, int>>				visitMap;
+		const std::array<std::pair<int,int>, 4>	neighbourOffsets = 
+		{
+			std::make_pair(-1, 0),
+			{ 1, 0 },
+			{ 0, -1 },
+			{ 0, 1 }
+		};
+
+		frontier.push(startCell);
+		visitMap.insert( startCell );
+
+		while (!frontier.empty())
+		{
+			auto [x, y] = frontier.front();
+			frontier.pop();
+
+			for (auto [xOffset, yOffset] : neighbourOffsets)
+			{
+				if (x + xOffset < 0 || x + xOffset >= cols
+					|| y + yOffset < 0 || y + yOffset >= rows)
+					continue;
+
+				if (auto neighbour = std::make_pair(x + xOffset, y + yOffset); visitMap.count(neighbour) == 0u && IsCellWalkable(grid[y + yOffset][x + xOffset]) )
+				{
+					frontier.push(neighbour);
+					visitMap.insert(neighbour );
+
+					if (int dist = distance(tVector2D<int>(startCell), tVector2D<int>(neighbour)); dist > maxDist)
+					{
+						maxDist		= dist;
+						farthest	= neighbour;
+					}
+				}
+			}
+		}
+
+		return farthest;
+	};
+
 	for (int y = 0; y < rows; y++)
 	{
 		//for (int x = 0; x < cols; x++)
 		{
-			if (grid[y][0] == static_cast<int8_t>(eGridCellType::Walkable))
+			if (IsCellWalkable( grid[y][0] ))
 			{
 				entryPoint.y = static_cast<float>(y * tileSize);
 				entryPoint.x = static_cast<float>(0 * tileSize);
+
+				auto [farX, farY] = getFurthestEndCell( grid, {0, y} );
+
+				exitPoint.y = static_cast<float>(farY * tileSize);
+				exitPoint.x = static_cast<float>(farX * tileSize);
+
 				break;
 			}
 		}
